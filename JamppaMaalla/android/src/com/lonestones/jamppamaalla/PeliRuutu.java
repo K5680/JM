@@ -30,17 +30,23 @@ public class PeliRuutu implements Screen{
     Sound dropSound;
     Music rainMusic;
     OrthographicCamera kamera;
-    Rectangle jamppa;
+
     Array<Rectangle> esteet;
     long esteEsiinAika;
     int tormaysMaara;
+    Jamppa jamppa;
 
     public PeliRuutu(final JamppaMaalla peli) {
         this.game = peli;
+        jamppa = new Jamppa();
+
 
         // load the images for the droplet and the jamppa, 64x64 pixels each
         esteKuva = new Texture(Gdx.files.internal("kivi.png"));
-        jamppaKuva = new Texture(Gdx.files.internal("jamppa.png"));
+
+
+     //   jamppaKuva = new Texture(Gdx.files.internal("jamppa.png"));
+
 
         // load the sound effects and background "music"
         // dropSound = Gdx.audio.newSound(Gdx.files.internal("drop.wav"));
@@ -52,11 +58,11 @@ public class PeliRuutu implements Screen{
         kamera.setToOrtho(false, 800, 480);
 
         // create a Rectangle to logically represent the jamppa
-        jamppa = new Rectangle();
-        jamppa.x = 800 / 2 - 64 / 2; // center the jamppa horizontally
-        jamppa.y = 20; // bottom left corner of the jamppa is 20 pixels above the bottom screen edge
-        jamppa.width = 64;
-        jamppa.height = 64;
+     //   jamppa = new Rectangle();
+     //   jamppa.x = 800 / 2 - 64 / 2; // center the jamppa horizontally
+     //   jamppa.y = 20; // bottom left corner of the jamppa is 20 pixels above the bottom screen edge
+     //   jamppa.width = 64;
+     //   jamppa.height = 64;
 
 
         // luodaan "esteet"-taulukko ja spawnataan esiin
@@ -86,8 +92,6 @@ public class PeliRuutu implements Screen{
 
         // tell the camera to update its matrices.
         kamera.update();
-
-
         // tell the SpriteBatch to render in the
         // coordinate system specified by the camera.
         game.batch.setProjectionMatrix(kamera.combined);
@@ -96,11 +100,14 @@ public class PeliRuutu implements Screen{
         // aloita "batch", piirrä "Jamppa" ja esteet ym
         game.batch.begin();
             game.font.draw(game.batch, "Jampan törmäilyt: " + tormaysMaara, 0, 480);
-            game.batch.draw(jamppaKuva, jamppa.x, jamppa.y);
+
+            piirraObjektit();
+
             for (Rectangle este : esteet) {
                 game.batch.draw(esteKuva, este.x, este.y);
             }
-        game.batch.end();
+
+            game.batch.end();
 
 
         // userinputti
@@ -108,20 +115,16 @@ public class PeliRuutu implements Screen{
             Vector3 touchPos = new Vector3();
             touchPos.set(Gdx.input.getX(), Gdx.input.getY(), 0);
             kamera.unproject(touchPos);
-            jamppa.x = touchPos.x - 64 / 2;
+            jamppa.setX(touchPos.x - 64 / 2);
         }
 
         // näppäinohjaus?
-        if (Gdx.input.isKeyPressed(Keys.LEFT))
-            jamppa.x -= 200 * Gdx.graphics.getDeltaTime();
-        if (Gdx.input.isKeyPressed(Keys.RIGHT))
-            jamppa.x += 200 * Gdx.graphics.getDeltaTime();
+//        if (Gdx.input.isKeyPressed(Keys.LEFT))
+//            jamppa.x -= 200 * Gdx.graphics.getDeltaTime();
+//        if (Gdx.input.isKeyPressed(Keys.RIGHT))
+//            jamppa.x += 200 * Gdx.graphics.getDeltaTime();
 
-        // make sure the jamppa stays within the screen bounds
-        if (jamppa.x < 0)
-            jamppa.x = 0;
-        if (jamppa.x > 800 - 64)
-            jamppa.x = 800 - 64;
+
 
         // tehdään uusi este jos aikaa kulunut tarpeeksi
         if (TimeUtils.nanoTime() - esteEsiinAika > 1000000000)
@@ -136,13 +139,19 @@ public class PeliRuutu implements Screen{
             este.y -= 200 * Gdx.graphics.getDeltaTime();
             if (este.y + 64 < 0)
                 iter.remove();
-            if (este.overlaps(jamppa)) {
+            if (este.overlaps(jamppa.getJamppaRect())) {
                 tormaysMaara++;
                 //      dropSound.play();
                 iter.remove();
             }
         }
     }
+
+    public void piirraObjektit() {
+        game.batch.draw(jamppa.getJamppaKuva(), jamppa.getX(), jamppa.getY());
+
+    }
+
 
     @Override
     public void resize(int width, int height) {

@@ -25,10 +25,7 @@ public class MainMenuRuutu implements Screen {
 
         // alkukuva ruutuun
         alkuruutu = new Texture(Gdx.files.internal("alkuruutu_valmis.png"));
-
         camera = new OrthographicCamera();
-
-
         camera.setToOrtho(false, 800, 480);
 
     }
@@ -42,8 +39,8 @@ public class MainMenuRuutu implements Screen {
         game.batch.setProjectionMatrix(camera.combined);
 
         game.batch.begin();
-            game.batch.draw(alkuruutu, 0,0);
-            game.font.draw(game.batch, "Täpsäytä ruutua aloittaaksesi ", 400, 150);
+            game.batch.draw(alkuruutu,0,0,800,480);
+            game.font.draw(game.batch, "Täpsäytä ruutua aloittaaksesi ", 240, 30,300f,1,false);
         game.batch.end();
 
         if (Gdx.input.isTouched()) {

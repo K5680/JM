@@ -21,8 +21,9 @@ public class JamppaMaalla extends Game {
         // SpriteBatch is a special class that is used to draw 2D images
         batch = new SpriteBatch();
 
-        // Use LibGDX's default Arial font.
+        // Uusi fontti, säädä koko
         font = new BitmapFont();
+        font.getData().setScale(2,2);
 
         // uusi mainmenu ruutu
         this.setScreen(new MainMenuRuutu(this));
