@@ -5,7 +5,7 @@ import android.os.Bundle;
 // libGDX -kirjastot
 import com.badlogic.gdx.backends.android.AndroidApplication;
 import com.badlogic.gdx.backends.android.AndroidApplicationConfiguration;
-import com.lonestones.vesada.JamppaMaalla;
+import com.lonestones.vesada.JamppaMaall;
 
 public class AndroidLauncher extends AndroidApplication {
 	@Override
