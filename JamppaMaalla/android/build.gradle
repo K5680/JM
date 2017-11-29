@@ -18,7 +18,7 @@ android {
         exclude 'META-INF/robovm/ios/robovm.xml'
     }
     defaultConfig {
-        applicationId "com.lonestones.vesada"
+        applicationId "com.lonestones.jamppamaalla"
         minSdkVersion 9
         targetSdkVersion 26
         versionCode 1
@@ -79,7 +79,7 @@ task run(type: Exec) {
     }
 
     def adb = path + "/platform-tools/adb"
-    commandLine "$adb", 'shell', 'am', 'start', '-n', 'com.lonestones.vesada/com.lonestones.vesada.AndroidLauncher'
+    commandLine "$adb", 'shell', 'am', 'start', '-n', 'com.lonestones.jamppamaalla/com.lonestones.jamppamaalla.AndroidLauncher'
 }
 
 // sets up the Android Eclipse project, using the old Ant based build.
