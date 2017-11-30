@@ -23,33 +23,24 @@ import com.badlogic.gdx.utils.TimeUtils;
 // Screens contain methods from ApplicationListener objects + new methods like show and hide (lose focus).
 public class PeliRuutu implements Screen{
     // "final" defines an entity that can only be assigned once
-    final JamppaMaalla game;
+    private final JamppaMaalla game;
 
-    Texture esteKuva;
-    Texture jamppaKuva;
-    Sound dropSound;
+    private Sound hitSound;
     Music rainMusic;
-    OrthographicCamera kamera;
+    private OrthographicCamera kamera;
+    private Array<Este> esteet;
+    private Este este;
+    private long esteEsiinAika;
+    private int tormaysMaara;
+    private Jamppa jamppa;
 
-    Array<Rectangle> esteet;
-    long esteEsiinAika;
-    int tormaysMaara;
-    Jamppa jamppa;
 
     public PeliRuutu(final JamppaMaalla peli) {
         this.game = peli;
         jamppa = new Jamppa();
 
-
-        // load the images for the droplet and the jamppa, 64x64 pixels each
-        esteKuva = new Texture(Gdx.files.internal("kivi.png"));
-
-
-     //   jamppaKuva = new Texture(Gdx.files.internal("jamppa.png"));
-
-
         // load the sound effects and background "music"
-        // dropSound = Gdx.audio.newSound(Gdx.files.internal("drop.wav"));
+        hitSound = Gdx.audio.newSound(Gdx.files.internal("244983__ani-music__ani-big-pipe-hit.wav"));
         // rainMusic = Gdx.audio.newMusic(Gdx.files.internal("rain.mp3"));
         // rainMusic.setLooping(true);
 
@@ -57,29 +48,20 @@ public class PeliRuutu implements Screen{
         kamera = new OrthographicCamera();
         kamera.setToOrtho(false, 800, 480);
 
-        // create a Rectangle to logically represent the jamppa
-     //   jamppa = new Rectangle();
-     //   jamppa.x = 800 / 2 - 64 / 2; // center the jamppa horizontally
-     //   jamppa.y = 20; // bottom left corner of the jamppa is 20 pixels above the bottom screen edge
-     //   jamppa.width = 64;
-     //   jamppa.height = 64;
-
-
-        // luodaan "esteet"-taulukko ja spawnataan esiin
-        esteet = new Array<Rectangle>();
+        // luodaan "esteet"-taulukko
+        esteet = new Array<Este>();
+        // ja spawnataan esteet esiin
         esteEsiin();
-
     }
 
-    private void esteEsiin() {
-        Rectangle este = new Rectangle();
-        este.x = MathUtils.random(0, 800 - 64);
-        este.y = 480;
-        este.width = 64;
-        este.height = 64;
-        esteet.add(este);
-        esteEsiinAika = TimeUtils.nanoTime();
+
+    // tuodaan esteet ruutuun
+    public void esteEsiin() {
+            Este este = new Este();
+            esteet.add(este);
+            esteEsiinAika = TimeUtils.nanoTime();
     }
+
 
     @Override
     public void render(float delta) {
@@ -99,57 +81,63 @@ public class PeliRuutu implements Screen{
 
         // aloita "batch", piirrä "Jamppa" ja esteet ym
         game.batch.begin();
-            game.font.draw(game.batch, "Jampan törmäilyt: " + tormaysMaara, 0, 480);
-
+            game.font.draw(game.batch, "Jampan törmäilyt: " + tormaysMaara + "  "+jamppa.getX(), 0, 480);
             piirraObjektit();
+        game.batch.end();
 
-            for (Rectangle este : esteet) {
-                game.batch.draw(esteKuva, este.x, este.y);
+
+
+
+        // ------------   ESTEIDEN HALLINTA -----------------------------------------------
+        // tehdään uusi este jos aikaa kulunut tarpeeksi
+        if (TimeUtils.nanoTime() - esteEsiinAika > 1000000000) {
+            esteEsiin();
+            esteEsiinAika = TimeUtils.nanoTime();
+        }
+
+        // liikuta esteitä, poista esteet ruudun ulkopuolella / osuneet
+        Iterator<Este> iter = esteet.iterator();
+        while (iter.hasNext()) {
+            Este este = iter.next();
+            este.setX( este.getX() - 200 * Gdx.graphics.getDeltaTime());
+
+            if (este.getX() + 64 < este.getXMin())
+                iter.remove();
+
+            if (este.getEsteRect().overlaps(jamppa.getJamppaRect())) {
+                tormaysMaara++;
+
+
+                hitSound.play();
+                //   iter.remove();
             }
+        // ------------   ESTEIDEN HALLINTA -----------------------------------------------
+        }
 
-            game.batch.end();
 
 
-        // userinputti
+        // Kosketusnäytön toiminnot
         if (Gdx.input.isTouched()) {
             Vector3 touchPos = new Vector3();
             touchPos.set(Gdx.input.getX(), Gdx.input.getY(), 0);
+
             kamera.unproject(touchPos);
             jamppa.setX(touchPos.x - 64 / 2);
-        }
+            jamppa.setY(touchPos.y - 64 / 2);
 
-        // näppäinohjaus?
-//        if (Gdx.input.isKeyPressed(Keys.LEFT))
-//            jamppa.x -= 200 * Gdx.graphics.getDeltaTime();
-//        if (Gdx.input.isKeyPressed(Keys.RIGHT))
-//            jamppa.x += 200 * Gdx.graphics.getDeltaTime();
-
-
-
-        // tehdään uusi este jos aikaa kulunut tarpeeksi
-        if (TimeUtils.nanoTime() - esteEsiinAika > 1000000000)
-            esteEsiin();
-
-        // move the esteet, remove any that are beneath the bottom edge of
-        // the screen or that hit the jamppa. In the later case we play back
-        // a sound effect as well.
-        Iterator<Rectangle> iter = esteet.iterator();
-        while (iter.hasNext()) {
-            Rectangle este = iter.next();
-            este.y -= 200 * Gdx.graphics.getDeltaTime();
-            if (este.y + 64 < 0)
-                iter.remove();
-            if (este.overlaps(jamppa.getJamppaRect())) {
-                tormaysMaara++;
-                //      dropSound.play();
-                iter.remove();
-            }
         }
     }
 
-    public void piirraObjektit() {
-        game.batch.draw(jamppa.getJamppaKuva(), jamppa.getX(), jamppa.getY());
 
+
+    // piirrä ruutuun jampat ja muut
+    public void piirraObjektit() {
+
+        for (Este este : esteet) {
+            game.batch.draw(este.getEsteKuva(), este.getX(), este.getY());
+        }
+
+        game.batch.draw(jamppa.getJamppaKuva(), jamppa.getX(), jamppa.getY());
     }
 
 
@@ -178,9 +166,9 @@ public class PeliRuutu implements Screen{
 
     @Override
     public void dispose() {
-        esteKuva.dispose();
-        jamppaKuva.dispose();
-        //  dropSound.dispose();
+        este.getEsteKuva().dispose();
+        jamppa.getJamppaKuva().dispose();
+        hitSound.dispose();
         // rainMusic.dispose();
     }
 
