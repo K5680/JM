@@ -44,7 +44,7 @@ public class MainMenuRuutu implements Screen {
         game.batch.end();
 
         if (Gdx.input.isTouched()) {
-            game.setScreen(new PeliRuutu(game));
+            game.setScreen(new PeliRuutu(game, this));
             dispose();
         }
     }

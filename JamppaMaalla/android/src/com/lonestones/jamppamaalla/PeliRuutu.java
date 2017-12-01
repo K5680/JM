@@ -21,23 +21,34 @@ import com.badlogic.gdx.utils.Array;
 import com.badlogic.gdx.utils.TimeUtils;
 
 // Screens contain methods from ApplicationListener objects + new methods like show and hide (lose focus).
-public class PeliRuutu implements Screen{
+public class PeliRuutu implements Screen {
     // "final" defines an entity that can only be assigned once
     private final JamppaMaalla game;
+    private final Screen parent; // MainMenuRuutu
 
+    private Texture taivaskuva;
     private Sound hitSound;
     Music rainMusic;
     private OrthographicCamera kamera;
     private Array<Este> esteet;
+    private Array<Tausta> taustat;
+    private Array<Tausta> maisema;
     private Este este;
+    private Tausta tausta;
+
     private long esteEsiinAika;
+    private long taustatEsiinAika;
+    private long maisemaEsiinAika;
     private int tormaysMaara;
     private Jamppa jamppa;
+    public static boolean peliAlkaaNyt = true; // eka käynnistys
 
-
-    public PeliRuutu(final JamppaMaalla peli) {
+    public PeliRuutu(final JamppaMaalla peli, Screen parent) {
+        this.parent = parent;
         this.game = peli;
-        jamppa = new Jamppa();
+
+        // otetaan "back" -nappula haltuun
+        Gdx.input.setCatchBackKey(true);
 
         // load the sound effects and background "music"
         hitSound = Gdx.audio.newSound(Gdx.files.internal("244983__ani-music__ani-big-pipe-hit.wav"));
@@ -48,23 +59,47 @@ public class PeliRuutu implements Screen{
         kamera = new OrthographicCamera();
         kamera.setToOrtho(false, 800, 480);
 
-        // luodaan "esteet"-taulukko
+        // taivas ruudun yläreunaan
+        taivaskuva = new Texture(Gdx.files.internal("taivas2.png"));
+
+        // Jamppa kehiin
+        jamppa = new Jamppa();
+
+        // luodaan "esteet"-taulukko  &  taustan "esteet"
         esteet = new Array<Este>();
+        taustat = new Array<Tausta>(0);
+        maisema = new Array<Tausta>(1);
+
         // ja spawnataan esteet esiin
         esteEsiin();
+        taustatEsiin();
+        peliAlkaaNyt = false;
     }
 
-
-    // tuodaan esteet ruutuun
-    public void esteEsiin() {
-            Este este = new Este();
-            esteet.add(este);
-            esteEsiinAika = TimeUtils.nanoTime();
+/*
+    @Override
+    public boolean keyUp(int keycode) {
+        if (keyCode == KeyEvent.KEYCODE_BACK && event.getAction() == KeyEvent.ACTION_DOWN) {
+            switch (currentScene) {
+                case SPLASH:
+                    break;
+                case MENU:
+                    Process.killProcess(Process.myPid());
+                    break;
+                case WORLDMENU:
+                    game.setScreen(new MenuScreen(game)); //MenuScreen is your class Screen
+                    break;
+                return false;
+            }
+        }
     }
+*/
+
 
 
     @Override
     public void render(float delta) {
+
         // clear the screen with a color. The
         // arguments to glClearColor are the red, green
         // blue and alpha component in the range [0,1]
@@ -81,64 +116,143 @@ public class PeliRuutu implements Screen{
 
         // aloita "batch", piirrä "Jamppa" ja esteet ym
         game.batch.begin();
-            game.font.draw(game.batch, "Jampan törmäilyt: " + tormaysMaara + "  "+jamppa.getX(), 0, 480);
-            piirraObjektit();
+        game.font.draw(game.batch, "Jampan törmäilyt: " + tormaysMaara + "  " + jamppa.getY(), 0, 480);
+        piirraObjektit();
         game.batch.end();
 
 
-
-
-        // ------------   ESTEIDEN HALLINTA -----------------------------------------------
+        // ------------>   ESTEIDEN HALLINTA  >-----------------------------------------------
         // tehdään uusi este jos aikaa kulunut tarpeeksi
         if (TimeUtils.nanoTime() - esteEsiinAika > 1000000000) {
             esteEsiin();
             esteEsiinAika = TimeUtils.nanoTime();
         }
+        // taustan kuvat
+        if (TimeUtils.nanoTime() - taustatEsiinAika > 1000000000) {
+            taustatEsiin();
+            taustatEsiinAika = TimeUtils.nanoTime();
+        }
+        // maiseman kuvat
+        if (TimeUtils.nanoTime() - maisemaEsiinAika > 1000000000) {
+            maisemaEsiin();
+            maisemaEsiinAika = TimeUtils.nanoTime();
+        }
+
 
         // liikuta esteitä, poista esteet ruudun ulkopuolella / osuneet
         Iterator<Este> iter = esteet.iterator();
         while (iter.hasNext()) {
             Este este = iter.next();
-            este.setX( este.getX() - 200 * Gdx.graphics.getDeltaTime());
+            este.setX(este.getX() - 200 * Gdx.graphics.getDeltaTime());
 
             if (este.getX() + 64 < este.getXMin())
                 iter.remove();
 
             if (este.getEsteRect().overlaps(jamppa.getJamppaRect())) {
                 tormaysMaara++;
-
-
                 hitSound.play();
                 //   iter.remove();
             }
-        // ------------   ESTEIDEN HALLINTA -----------------------------------------------
-        }
-
-
-
-        // Kosketusnäytön toiminnot
-        if (Gdx.input.isTouched()) {
-            Vector3 touchPos = new Vector3();
-            touchPos.set(Gdx.input.getX(), Gdx.input.getY(), 0);
-
-            kamera.unproject(touchPos);
-            jamppa.setX(touchPos.x - 64 / 2);
-            jamppa.setY(touchPos.y - 64 / 2);
 
         }
+
+        // liikuta taustaobjekteja, poista ruudun ulkopuolella
+        Iterator<Tausta> iter2 = taustat.iterator();
+        while (iter2.hasNext()) {
+            Este tausta = iter2.next();
+            tausta.setX(tausta.getX() - 200 * Gdx.graphics.getDeltaTime());
+            // poista ruudun ulkopuolella
+            if (tausta.getX() < tausta.getXMin()-150)
+                iter2.remove();
+        }
+        // liikuta maisemaa (pilvet ym)
+        Iterator<Tausta> iter3 = maisema.iterator();
+        while (iter3.hasNext()) {
+            Este tausta = iter3.next();
+            tausta.setX(tausta.getX() - 150 * Gdx.graphics.getDeltaTime());
+            // poista ruudun ulkopuolella
+            if (tausta.getX() < tausta.getXMin())
+                iter3.remove();
+        }
+
+    // ------------<   ESTEIDEN HALLINTA  <-----------------------------------------------
+
+    //                 Kosketusnäyttö/näppäintoiminnot - - - - - - - - - - - - - - - - - -
+    if(Gdx.input.isTouched())
+    {
+        Vector3 touchPos = new Vector3();
+        touchPos.set(Gdx.input.getX(), Gdx.input.getY(), 0);
+
+        kamera.unproject(touchPos);
+        jamppa.setX(touchPos.x - 64 / 2);
+        jamppa.setY(touchPos.y - 64 / 2);
+
+    }
+
+    if (Gdx.input.isKeyPressed(Keys.BACK)){
+        // back-napilla takaisin main menuun
+        game.setScreen(parent);
+    }
+}
+
+
+    // tuodaan esteet ruutuun
+    public void esteEsiin() {
+        Este este = new Este();
+        esteet.add(este);
+        esteEsiinAika = TimeUtils.nanoTime();
+    }
+
+    // tuodaan tausta ruudun yläosaam
+    public void taustatEsiin() {
+        // tuodaan myös taustan "esteet"
+        Tausta tausta = new Tausta(0);
+        taustat.add(tausta);
+        taustatEsiinAika = TimeUtils.nanoTime();
+    }
+    // tuodaan
+    // tausta ruudun yläosaam
+    public void maisemaEsiin() {
+        // tuodaan myös taustan maisema (pilvet tms)
+        Tausta tausta = new Tausta(1);
+        maisema.add(tausta);
+        maisemaEsiinAika = TimeUtils.nanoTime();
     }
 
 
-
-    // piirrä ruutuun jampat ja muut
+    // PIIRRÄ ruutuun Jampat ja muut -------------------------------------------------------
     public void piirraObjektit() {
 
+        // piirrä tausta
+        game.batch.draw(taivaskuva,0,480-taivaskuva.getHeight());
+
+        // piirrä maisema
+        for (Este tausta : maisema) {
+            game.batch.draw(tausta.getEsteKuva(), tausta.getX(), tausta.getY());
+        }
+
+        // piirrä taustat
+        for (Este tausta : taustat) {
+            game.batch.draw(tausta.getEsteKuva(), tausta.getX(), tausta.getY());
+        }
+
+
+        // piirrä kolikko
+
+
+        // piirrä esteet
         for (Este este : esteet) {
             game.batch.draw(este.getEsteKuva(), este.getX(), este.getY());
         }
 
+        // piirrä Jamppa
         game.batch.draw(jamppa.getJamppaKuva(), jamppa.getX(), jamppa.getY());
+
+        // piirrä ruohonleikkuri
+
     }
+
+
 
 
     @Override

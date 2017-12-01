@@ -1,8 +1,53 @@
 package com.lonestones.jamppamaalla;
 
+import com.badlogic.gdx.Gdx;
+import com.badlogic.gdx.graphics.Texture;
+import com.badlogic.gdx.math.MathUtils;
+
 /**
  * Created by Vesada on 30.11.2017.
  */
 
-public class Tausta {
+// periytetään taustan objektit Esteestä, koska toimivat samaan tapaan, mutta ilman törmäystä
+public class Tausta extends Este{
+
+    private int tasot;
+
+    public Tausta(int taso) {
+        super();
+        tasot = taso;
+
+        // aseta x ja y (puuraja = yläreuna), peliä luodessa saa laittaa mihin vain x-arvoon
+        if (PeliRuutu.peliAlkaaNyt)
+            x = MathUtils.random(0, 800);
+        else
+            x = 800;
+
+        // onko puurivistöä vai tausta pilviä
+        if (tasot == 0) {
+            // lataa taustan "este" -kuva, arpomalla tyyppi
+            esteTyyppi = MathUtils.random(0, 7);
+            switch (esteTyyppi) {
+                case 0:
+                case 1:
+                case 2:
+                case 3:
+                case 6:
+                    esteKuva = new Texture(Gdx.files.internal("kuusi_iso.png"));
+                    break;
+                case 4:
+                case 5:
+                    esteKuva = new Texture(Gdx.files.internal("kivi.png"));
+                    break;
+                case 7:
+                    esteKuva = new Texture(Gdx.files.internal("talo.png"));
+                    break;
+            }
+            y = JamppaMaalla.Puuraja - 32;
+
+        } else {
+            esteKuva = new Texture(Gdx.files.internal("pilvi2.png"));
+            y = JamppaMaalla.Puuraja-15;
+        }
+    }
 }

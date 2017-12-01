@@ -14,10 +14,10 @@ import com.badlogic.gdx.utils.TimeUtils;
 
 public class Este {
 
-    private Texture esteKuva;
-    private int esteTyyppi;
-    private float x;
-    private float y;
+    public Texture esteKuva;
+    public int esteTyyppi;
+    public float x;
+    public float y;
     private float yMax;
     private float xMin;
     private float yMin;
@@ -33,12 +33,12 @@ public class Este {
                 esteKuva = new Texture(Gdx.files.internal("kivi.png"));
                 break;
             case 1:
-                esteKuva = new Texture(Gdx.files.internal("kuusi_iso.png"));
+                esteKuva = new Texture(Gdx.files.internal("kolikko.png"));
                 break;
         }
 
-        // aseta x ja y
-        y = MathUtils.random(0, 480 - 64);
+        // aseta x ja y (puuraja = yläreuna)
+        y = MathUtils.random(0, JamppaMaalla.Puuraja-100);
         x = 800;
         xMin = -100;
 

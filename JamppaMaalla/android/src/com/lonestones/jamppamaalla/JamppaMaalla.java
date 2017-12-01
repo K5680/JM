@@ -13,7 +13,7 @@ import com.badlogic.gdx.graphics.g2d.SpriteBatch;
 // ApplicationListener + helper methods to set and handle Screen rendering.
 
 public class JamppaMaalla extends Game {
-
+    public static final float Puuraja = 300;
     SpriteBatch batch;
     BitmapFont font;
 
