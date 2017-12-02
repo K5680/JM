@@ -5,6 +5,7 @@ import android.util.Log;
 import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.graphics.Texture;
 import com.badlogic.gdx.math.Rectangle;
+import com.badlogic.gdx.utils.TimeUtils;
 
 /**
  * Created by Omistaja on 29.11.2017.
@@ -21,6 +22,8 @@ public class Jamppa {
     private float xMin;
     private float yMin;
     private Rectangle jamppaRect;
+    public boolean jamppaTormaa = false;
+    public long jamppaMaissa;
 
     public Jamppa() {
         // lataa jampan kuva
@@ -65,6 +68,13 @@ public class Jamppa {
         Log.d("Y", "setY: "+y);
         y = yi;
         jamppaRect.y = yi;
+    }
+
+
+    public void jamppaCrash() {
+        jamppaTormaa = true;
+        jamppaMaissa = TimeUtils.nanoTime();
+
     }
 
 

@@ -4,8 +4,6 @@ package com.lonestones.jamppamaalla;
  * Created by Vesada on 29.11.2017.
  */
 
-import java.util.Iterator;
-
 import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.Input.Keys;
 import com.badlogic.gdx.Screen;
@@ -14,11 +12,13 @@ import com.badlogic.gdx.audio.Sound;
 import com.badlogic.gdx.graphics.GL20;
 import com.badlogic.gdx.graphics.OrthographicCamera;
 import com.badlogic.gdx.graphics.Texture;
+import com.badlogic.gdx.graphics.g2d.ParticleEffect;
 import com.badlogic.gdx.math.MathUtils;
-import com.badlogic.gdx.math.Rectangle; //add this import and NOT the one in the standard library
 import com.badlogic.gdx.math.Vector3;
 import com.badlogic.gdx.utils.Array;
 import com.badlogic.gdx.utils.TimeUtils;
+
+import java.util.Iterator;
 
 // Screens contain methods from ApplicationListener objects + new methods like show and hide (lose focus).
 public class PeliRuutu implements Screen {
@@ -35,17 +35,30 @@ public class PeliRuutu implements Screen {
     private Array<Tausta> maisema;
     private Este este;
     private Tausta tausta;
+    private long taustaIntervalli = 1000;
+    private long esteVauhti = 200;
+    private long maisemaVauhti = 150;
 
     private long esteEsiinAika;
     private long taustatEsiinAika;
     private long maisemaEsiinAika;
     private int tormaysMaara;
     private Jamppa jamppa;
+
+    ParticleEffect pe;
+
+
     public static boolean peliAlkaaNyt = true; // eka käynnistys
 
     public PeliRuutu(final JamppaMaalla peli, Screen parent) {
         this.parent = parent;
         this.game = peli;
+
+        // partikkeliefektit
+        pe = new ParticleEffect();
+        pe.load(Gdx.files.internal("tuliefekti2.p"),Gdx.files.internal(""));
+        pe.getEmitters().first().setPosition(Gdx.graphics.getWidth()/2,Gdx.graphics.getHeight()/2);
+
 
         // otetaan "back" -nappula haltuun
         Gdx.input.setCatchBackKey(true);
@@ -73,27 +86,12 @@ public class PeliRuutu implements Screen {
         // ja spawnataan esteet esiin
         esteEsiin();
         taustatEsiin();
+        pe.start();
         peliAlkaaNyt = false;
     }
 
-/*
-    @Override
-    public boolean keyUp(int keycode) {
-        if (keyCode == KeyEvent.KEYCODE_BACK && event.getAction() == KeyEvent.ACTION_DOWN) {
-            switch (currentScene) {
-                case SPLASH:
-                    break;
-                case MENU:
-                    Process.killProcess(Process.myPid());
-                    break;
-                case WORLDMENU:
-                    game.setScreen(new MenuScreen(game)); //MenuScreen is your class Screen
-                    break;
-                return false;
-            }
-        }
-    }
-*/
+
+
 
 
 
@@ -114,84 +112,120 @@ public class PeliRuutu implements Screen {
         game.batch.setProjectionMatrix(kamera.combined);
 
 
-        // aloita "batch", piirrä "Jamppa" ja esteet ym
+
+        // aloita "batch", piirrä "Jamppa" ja esteet ym  // BATCH BEGIN
         game.batch.begin();
-        game.font.draw(game.batch, "Jampan törmäilyt: " + tormaysMaara + "  " + jamppa.getY(), 0, 480);
-        piirraObjektit();
-        game.batch.end();
+            // pbjektit ruutuun
+            piirraObjektit();
+            // teksti ruutuun
+            game.font.draw(game.batch, "Törmäilyt: " + tormaysMaara + "  " + jamppa.getY(), 0, 480);
+        game.batch.end();                                // BATCH END
 
 
-        // ------------>   ESTEIDEN HALLINTA  >-----------------------------------------------
-        // tehdään uusi este jos aikaa kulunut tarpeeksi
-        if (TimeUtils.nanoTime() - esteEsiinAika > 1000000000) {
-            esteEsiin();
-            esteEsiinAika = TimeUtils.nanoTime();
-        }
-        // taustan kuvat
-        if (TimeUtils.nanoTime() - taustatEsiinAika > 1000000000) {
-            taustatEsiin();
-            taustatEsiinAika = TimeUtils.nanoTime();
-        }
-        // maiseman kuvat
-        if (TimeUtils.nanoTime() - maisemaEsiinAika > 1000000000) {
-            maisemaEsiin();
+
+        // Jamppa osuu esteeseen, pysäytetään ruudunvieritys, mitä tapahtuu jampalle?
+        if (jamppa.jamppaTormaa){
+
+            esteEsiinAika = TimeUtils.nanoTime();    // nollataan ajastimia
+            taustatEsiinAika = TimeUtils.nanoTime(); // koska ei liikuta
             maisemaEsiinAika = TimeUtils.nanoTime();
+            taustaIntervalli = TimeUtils.millisToNanos(MathUtils.random(1000, 5000));
+
+            if (TimeUtils.nanoTime() > jamppa.jamppaMaissa + TimeUtils.millisToNanos(1000)) {
+                jamppa.jamppaTormaa = false;
+                // jamppa must go on
+                esteVauhti = 200;
+                maisemaVauhti = 150;
+                pe.reset(); // savuefektin resetointi
+                //     if (pe.isComplete())   // effect reset, tarpeen?
+                }
+
         }
 
 
-        // liikuta esteitä, poista esteet ruudun ulkopuolella / osuneet
-        Iterator<Este> iter = esteet.iterator();
-        while (iter.hasNext()) {
-            Este este = iter.next();
-            este.setX(este.getX() - 200 * Gdx.graphics.getDeltaTime());
-
-            if (este.getX() + 64 < este.getXMin())
-                iter.remove();
-
-            if (este.getEsteRect().overlaps(jamppa.getJamppaRect())) {
-                tormaysMaara++;
-                hitSound.play();
-                //   iter.remove();
+            // ------------>   ESTEIDEN HALLINTA  >-----------------------------------------------
+            // tehdään uusi este jos aikaa kulunut tarpeeksi
+            if (TimeUtils.nanoTime() - esteEsiinAika > 1000000000) {
+                esteEsiin();
+                esteEsiinAika = TimeUtils.nanoTime();
+            }
+            // taustan kuvat
+            if (TimeUtils.nanoTime() - taustatEsiinAika > TimeUtils.millisToNanos(600)) {
+                taustatEsiin();
+                taustatEsiinAika = TimeUtils.nanoTime();
+            }
+            // maiseman kuvat
+            if (TimeUtils.nanoTime() - maisemaEsiinAika > taustaIntervalli) {
+                maisemaEsiin();
+                maisemaEsiinAika = TimeUtils.nanoTime();
+                taustaIntervalli = TimeUtils.millisToNanos(MathUtils.random(1000, 5000)); // kuinka usein uusi pilvi tms tulee esiin
             }
 
-        }
 
-        // liikuta taustaobjekteja, poista ruudun ulkopuolella
-        Iterator<Tausta> iter2 = taustat.iterator();
-        while (iter2.hasNext()) {
-            Este tausta = iter2.next();
-            tausta.setX(tausta.getX() - 200 * Gdx.graphics.getDeltaTime());
-            // poista ruudun ulkopuolella
-            if (tausta.getX() < tausta.getXMin()-150)
-                iter2.remove();
-        }
-        // liikuta maisemaa (pilvet ym)
-        Iterator<Tausta> iter3 = maisema.iterator();
-        while (iter3.hasNext()) {
-            Este tausta = iter3.next();
-            tausta.setX(tausta.getX() - 150 * Gdx.graphics.getDeltaTime());
-            // poista ruudun ulkopuolella
-            if (tausta.getX() < tausta.getXMin())
-                iter3.remove();
-        }
+            // LIIKUTA esteitä, poista esteet ruudun ulkopuolella / osuneet
+            Iterator<Este> iter = esteet.iterator();
+            while (iter.hasNext()) {
+                Este este = iter.next();
+                este.setX(este.getX() - esteVauhti * Gdx.graphics.getDeltaTime());
 
-    // ------------<   ESTEIDEN HALLINTA  <-----------------------------------------------
+                if (este.getX() + 64 < este.getXMin())
+                    iter.remove();
 
-    //                 Kosketusnäyttö/näppäintoiminnot - - - - - - - - - - - - - - - - - -
-    if(Gdx.input.isTouched())
-    {
-        Vector3 touchPos = new Vector3();
-        touchPos.set(Gdx.input.getX(), Gdx.input.getY(), 0);
+                // "jamppa" kompuroi
+                if (este.getEsteRect().overlaps(jamppa.getJamppaRect())) {
 
-        kamera.unproject(touchPos);
-        jamppa.setX(touchPos.x - 64 / 2);
-        jamppa.setY(touchPos.y - 64 / 2);
+                    if (!jamppa.jamppaTormaa) {
+                        tormaysMaara++;
+                        hitSound.play();
 
-    }
+                        jamppa.jamppaCrash();
+
+                        esteVauhti = 0;
+                        maisemaVauhti = 0;
+                        iter.remove();
+                    }
+                }
+            }
+
+            // liikuta taustaobjekteja (puurivistö), poista ruudun ulkopuolella
+            Iterator<Tausta> iter2 = taustat.iterator();
+            while (iter2.hasNext()) {
+                Este tausta = iter2.next();
+                tausta.setX(tausta.getX() - esteVauhti * Gdx.graphics.getDeltaTime());
+                // poista ruudun ulkopuolella
+                if (tausta.getX() < tausta.getXMin() - 150)
+                    iter2.remove();
+            }
+            // liikuta maisemaa (pilvet ym)
+            Iterator<Tausta> iter3 = maisema.iterator();
+            while (iter3.hasNext()) {
+                Este tausta = iter3.next();
+                tausta.setX(tausta.getX() - maisemaVauhti * Gdx.graphics.getDeltaTime());
+                // poista ruudun ulkopuolella
+                if (tausta.getX() < tausta.getXMin() - 200)
+                    iter3.remove();
+            }
+
+
+            // ------------<   ESTEIDEN HALLINTA  <-----------------------------------------------
+
+            //                 Kosketusnäyttö/näppäintoiminnot - - - - - - - - - - - - - - - - - -
+            if (Gdx.input.isTouched()) {
+                Vector3 touchPos = new Vector3();
+                touchPos.set(Gdx.input.getX(), Gdx.input.getY(), 0);
+
+                kamera.unproject(touchPos);
+                jamppa.setX(touchPos.x - 64 / 2);
+                jamppa.setY(touchPos.y - 64 / 2);
+
+            }
+
+
 
     if (Gdx.input.isKeyPressed(Keys.BACK)){
         // back-napilla takaisin main menuun
         game.setScreen(parent);
+        //dispose(); // peliruutu poistoon
     }
 }
 
@@ -236,7 +270,6 @@ public class PeliRuutu implements Screen {
             game.batch.draw(tausta.getEsteKuva(), tausta.getX(), tausta.getY());
         }
 
-
         // piirrä kolikko
 
 
@@ -249,6 +282,13 @@ public class PeliRuutu implements Screen {
         game.batch.draw(jamppa.getJamppaKuva(), jamppa.getX(), jamppa.getY());
 
         // piirrä ruohonleikkuri
+
+        // SAVU-efektin sijainnin update ja piirto, jos Jamppa törmää
+        if (jamppa.jamppaTormaa) {
+            pe.update(Gdx.graphics.getDeltaTime());
+            pe.setPosition(jamppa.getX() + 50, jamppa.getY() + 10);  // set the position
+            pe.draw(game.batch, Gdx.graphics.getDeltaTime()); // draw it
+        }
 
     }
 

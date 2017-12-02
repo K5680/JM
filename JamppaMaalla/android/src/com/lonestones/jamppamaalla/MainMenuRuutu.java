@@ -1,13 +1,11 @@
 package com.lonestones.jamppamaalla;
 
-import android.media.Image;
-
 import com.badlogic.gdx.Gdx;
+import com.badlogic.gdx.Input;
 import com.badlogic.gdx.Screen;
 import com.badlogic.gdx.graphics.GL20;
 import com.badlogic.gdx.graphics.OrthographicCamera;
 import com.badlogic.gdx.graphics.Texture;
-import com.badlogic.gdx.utils.viewport.FitViewport;
 
 /**
  * Created by Vesada on 29.11.2017.
@@ -43,9 +41,17 @@ public class MainMenuRuutu implements Screen {
             game.font.draw(game.batch, "Täpsäytä ruutua aloittaaksesi ", 240, 30,300f,1,false);
         game.batch.end();
 
+        // otetaan "back" -nappula haltuun
+        Gdx.input.setCatchBackKey(true);
+
         if (Gdx.input.isTouched()) {
             game.setScreen(new PeliRuutu(game, this));
             dispose();
+        }
+
+        if (Gdx.input.isKeyPressed(Input.Keys.BACK)){
+            // back-napilla takaisin main menuun
+           //
         }
     }
 

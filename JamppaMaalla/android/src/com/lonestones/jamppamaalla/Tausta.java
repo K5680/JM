@@ -9,7 +9,7 @@ import com.badlogic.gdx.math.MathUtils;
  */
 
 // periytetään taustan objektit Esteestä, koska toimivat samaan tapaan, mutta ilman törmäystä
-public class Tausta extends Este{
+public class Tausta extends Este {
 
     private int tasot;
 
@@ -46,7 +46,15 @@ public class Tausta extends Este{
             y = JamppaMaalla.Puuraja - 32;
 
         } else {
-            esteKuva = new Texture(Gdx.files.internal("pilvi2.png"));
+            esteTyyppi = MathUtils.random(0, 3);
+            switch (esteTyyppi) {
+                case 0:
+                    esteKuva = new Texture(Gdx.files.internal("pilvi1.png"));
+                    break;
+                case 1: case 2: case 3:
+                    esteKuva = new Texture(Gdx.files.internal("pilvi2.png"));
+                break;
+            }
             y = JamppaMaalla.Puuraja-15;
         }
     }
