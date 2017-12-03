@@ -16,6 +16,7 @@ public class Tausta extends Este {
     public Tausta(int taso) {
         super();
         tasot = taso;
+        tyyppi = "tausta";
 
         // aseta x ja y (puuraja = yläreuna), peliä luodessa saa laittaa mihin vain x-arvoon
         if (PeliRuutu.peliAlkaaNyt)

@@ -51,7 +51,7 @@ public class Jamppa {
             xi = xMin;
         if (xi > xMax - 64)
             xi = xMax - 64;
-        Log.d("X", "setX: "+x+"   xMax"+xMax);
+       // Log.d("X", "setX: "+x+"   xMax"+xMax);
         x = xi;
         jamppaRect.x = xi;
     }
@@ -63,7 +63,7 @@ public class Jamppa {
         if (yi > yMax - 64)
             yi = yMax - 64;
 
-        Log.d("Y", "setY: "+y);
+       // Log.d("Y", "setY: "+y);
         y = yi;
         jamppaRect.y = yi;
     }
