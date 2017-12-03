@@ -28,18 +28,16 @@ public class Jamppa {
     public Jamppa() {
         // lataa jampan kuva
         jamppaKuva = new Texture(Gdx.files.internal("jamppa.png"));
-
-        // create a Rectangle to logically represent the jamppa
-        jamppaRect = new Rectangle();
+        jamppaRect = new Rectangle();               // rect, jonka törmäyksiä esteisiin tarkkaillaan
         x =  100;
         y = 20; // bottom left corner of the jamppa is 20 pixels above the bottom screen edge
-        jamppaRect.width = 64;
-        jamppaRect.height = 64;
-
+        jamppaRect.width = jamppaKuva.getWidth()/2; // rect koko, säädettävä kohdalleen
+        jamppaRect.height =  30;                    // rect koko, säädettävä kohdalleen
         xMin = -64;
         yMin = 0;
         xMax = 200;
         yMax = JamppaMaalla.Puuraja;    // yläreuna jampan liikkumisessa
+
     }
 
     public Rectangle getJamppaRect() {

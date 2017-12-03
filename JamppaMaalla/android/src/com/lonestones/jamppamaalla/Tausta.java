@@ -32,11 +32,11 @@ public class Tausta extends Este {
                 case 1:
                 case 2:
                 case 3:
-                case 6:
+                case 4:
                     esteKuva = new Texture(Gdx.files.internal("kuusi_iso.png"));
                     break;
-                case 4:
                 case 5:
+                case 6:
                     esteKuva = new Texture(Gdx.files.internal("kivi.png"));
                     break;
                 case 7:
@@ -46,12 +46,12 @@ public class Tausta extends Este {
             y = JamppaMaalla.Puuraja - 32;
 
         } else {
-            esteTyyppi = MathUtils.random(0, 3);
+            esteTyyppi = MathUtils.random(0, 2);
             switch (esteTyyppi) {
                 case 0:
                     esteKuva = new Texture(Gdx.files.internal("pilvi1.png"));
                     break;
-                case 1: case 2: case 3:
+                case 1: case 2:
                     esteKuva = new Texture(Gdx.files.internal("pilvi2.png"));
                 break;
             }

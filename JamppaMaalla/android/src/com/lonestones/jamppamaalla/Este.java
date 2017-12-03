@@ -41,8 +41,8 @@ public class Este {
 
         // tee esteen rectangle
         esteRect = new Rectangle();
-        esteRect.width = 64;
-        esteRect.height = 64;
+        esteRect.width = esteKuva.getWidth();
+        esteRect.height = esteKuva.getHeight();
         esteRect.x = x;
         esteRect.y = y;
     }
