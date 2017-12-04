@@ -4,30 +4,22 @@ package com.lonestones.jamppamaalla;
  * Created by Vesada on 29.11.2017.
  */
 
-import android.graphics.Paint;
-import android.util.Log;
 
 import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.Input.Keys;
 import com.badlogic.gdx.Screen;
 import com.badlogic.gdx.audio.Music;
 import com.badlogic.gdx.audio.Sound;
-import com.badlogic.gdx.graphics.Color;
 import com.badlogic.gdx.graphics.GL20;
 import com.badlogic.gdx.graphics.OrthographicCamera;
 import com.badlogic.gdx.graphics.Pixmap;
 import com.badlogic.gdx.graphics.Texture;
-import com.badlogic.gdx.graphics.g2d.Animation;
 import com.badlogic.gdx.graphics.g2d.ParticleEffect;
-import com.badlogic.gdx.graphics.g2d.TextureRegion;
-import com.badlogic.gdx.graphics.glutils.ShapeRenderer;
 import com.badlogic.gdx.math.MathUtils;
-import com.badlogic.gdx.math.Vector2;
 import com.badlogic.gdx.math.Vector3;
 import com.badlogic.gdx.scenes.scene2d.Stage;
 import com.badlogic.gdx.utils.Array;
 import com.badlogic.gdx.utils.TimeUtils;
-import com.badlogic.gdx.utils.viewport.ScreenViewport;
 
 import java.util.Iterator;
 
@@ -47,8 +39,10 @@ public class PeliRuutu implements Screen {
     private Este este;
     private Tausta tausta;
     private long taustaIntervalli = 1000;
-    private long esteVauhti = 200;
-    private long maisemaVauhti = 150;
+    private long perusVauhti = 300;
+    private long esteVauhti = perusVauhti;
+    private long maisemaVauhti = perusVauhti-50;
+
     private long esteEsiinAika;
     private long taustatEsiinAika;
     private long maisemaEsiinAika;
@@ -56,20 +50,15 @@ public class PeliRuutu implements Screen {
     private Jamppa jamppa;
 
     private Stage stage; // onko oltava?
-    private ParticleEffect pe;
-
-
-    //animaatio
-    float stateTime;
-    private static final int FRAME_COLS = 3, FRAME_ROWS = 2;
-    Animation<TextureRegion> walkAnimation; // frame type = textureregion
-    Texture walkSheet;
-
-
-
-
+    private ParticleEffect pe;  // savu- ym efektit
 
     public static boolean peliAlkaaNyt = true; // eka käynnistys
+    private double nurmeaLeikattu;
+    private int kerätytKolikot;
+    private double prosentti;
+    private double nurmiPotentiaali;
+
+    Texture leikkuri;                                                       // '****
 
     public PeliRuutu(final JamppaMaalla peli, Screen parent) {
         this.parent = parent;
@@ -79,42 +68,17 @@ public class PeliRuutu implements Screen {
         // Jamppa kehiin
         jamppa = new Jamppa();
 
-
-
-        // Load the sprite sheet as a Texture
-        walkSheet = new Texture(Gdx.files.internal("jamppa_anim.png"));
-
-        TextureRegion[][] tmp = TextureRegion.split(walkSheet,
-                walkSheet.getWidth() / FRAME_COLS,
-                walkSheet.getHeight() / FRAME_ROWS);
-
-        TextureRegion[] walkFrames = new TextureRegion[FRAME_COLS * FRAME_ROWS];
-        int index = 0;
-        for (int i = 0; i < FRAME_ROWS; i++) {
-            for (int j = 0; j < FRAME_COLS; j++) {
-                walkFrames[index++] = tmp[i][j];
-            }
-        }
-
-        walkAnimation = new Animation<TextureRegion>(0.1f, walkFrames);
-
-        // Instantiate a SpriteBatch for drawing and reset the elapsed animation
-        // time to 0
-        stateTime = 0f;
-
-
-
+        leikkuri = new Texture(Gdx.files.internal("leikkuri.png"));     //****
 
         // partikkeliefektit
         pe = new ParticleEffect();
         pe.load(Gdx.files.internal("tuliefekti2.p"),Gdx.files.internal(""));
         pe.getEmitters().first().setPosition(Gdx.graphics.getWidth()/2,Gdx.graphics.getHeight()/2);
 
-
         // otetaan "back" -nappula haltuun
         Gdx.input.setCatchBackKey(true);
 
-        // load the sound effects and background "music"
+        // lataa äänet ja musiikki
         hitSound = Gdx.audio.newSound(Gdx.files.internal("244983__ani-music__ani-big-pipe-hit.wav"));
         // rainMusic = Gdx.audio.newMusic(Gdx.files.internal("rain.mp3"));
         // rainMusic.setLooping(true);
@@ -125,8 +89,6 @@ public class PeliRuutu implements Screen {
 
          // taivas ruudun yläreunaan
         taivaskuva = new Texture(Gdx.files.internal("taivas2.png"));
-
-
 
         // luodaan "esteet"-taulukko  &  taustan "esteet"
         esteet = new Array<Este>();
@@ -159,24 +121,28 @@ public class PeliRuutu implements Screen {
         game.batch.setProjectionMatrix(kamera.combined);    // tell the SpriteBatch to render in the coordinate system specified by the camera
 
 
+        Pixmap pixmap = new Pixmap(30,30, Pixmap.Format.RGBA8888);
+        Texture texture = new Texture(pixmap);
 
 
 
-    //    Pixmap pixmap = new Pixmap(jamppa.getJamppaKuva().getWidth(),jamppa.getJamppaKuva().getHeight(), Pixmap.Format.RGBA8888);
-    //    Texture texture = new Texture(pixmap);
+        if (nurmeaLeikattu > 0) prosentti =  100*(nurmeaLeikattu/nurmiPotentiaali); // lasketaan paljonko nurmea leikattu prosentuaalisesti
+        double round = Math.pow(10,1);
+        prosentti = Math.round(prosentti*round)/round;
 
-
-        // aloita "batch", piirrä "Jamppa" ja esteet ym  // BATCH BEGIN
+        // aloita "batch", piirrä "Jamppa" ja esteet ym                    // BATCH BEGIN
         game.batch.begin();
             piirraObjektit(); // objektit ruutuun
-            game.font.draw(game.batch, "Törmäilyt: " + tormaysMaara + "  " + jamppa.getY() + " " + jamppa.getX(), 0, 480); // teksti ruutuun
+            game.font.draw(game.batch, "Törmäilyt: " + tormaysMaara + "  Leikkaustarkkuus:  " + prosentti + "  Kolikot: " + kerätytKolikot, 0, 480); // teksti ruutuun
 
             // Gdx.app.log("tag","msg");
-        //    pixmap.setColor(1,1,0,100);
-        //    pixmap.fillRectangle(0,0,jamppa.getJamppaKuva().getWidth(),jamppa.getJamppaKuva().getHeight());
-        //    texture.draw(pixmap,0,0);
-        //    game.batch.draw(texture, jamppa.getX(),jamppa.getY(), jamppa.getJamppaKuva().getWidth(),jamppa.getJamppaKuva().getHeight());
-        game.batch.end();                                // BATCH END
+            pixmap.setColor(1,1,0,100);
+            pixmap.fillRectangle(0,0,30,30);
+            texture.draw(pixmap,0,0);
+            game.batch.draw(texture, jamppa.getX()+30,jamppa.getY()+10, 30,30);
+        game.batch.end();                                                   // BATCH END
+
+
 
 
 
@@ -191,8 +157,8 @@ public class PeliRuutu implements Screen {
             if (TimeUtils.nanoTime() > jamppa.jamppaMaissa + TimeUtils.millisToNanos(1000)) {
                 jamppa.jamppaTormaa = false;
                 // jamppa must go on
-                esteVauhti = 200;
-                maisemaVauhti = 150;
+                esteVauhti = perusVauhti;
+                maisemaVauhti = perusVauhti-50;
                 pe.reset(); // savuefektin resetointi
                 //     if (pe.isComplete())   // effect reset, tarpeen?
                 }
@@ -202,7 +168,7 @@ public class PeliRuutu implements Screen {
 
             // ------------>   ESTEIDEN HALLINTA  >-----------------------------------------------
             // tehdään uusi este jos aikaa kulunut tarpeeksi
-            if (TimeUtils.nanoTime() - esteEsiinAika > 500000000) {
+            if (TimeUtils.nanoTime() - esteEsiinAika > 250000000) {
                 esteEsiin();
                 esteEsiinAika = TimeUtils.nanoTime();
             }
@@ -228,7 +194,7 @@ public class PeliRuutu implements Screen {
                 if (este.getX() + 64 < este.getXMin())
                     iter.remove();
 
-                // "jamppa" osuu johonkin
+                // ---------------------------------------------------------------------------------- JAMPPA OSUU JOHONKIN
                 if (este.getEsteRect().overlaps(jamppa.getJamppaRect())) {
 
                     if (!jamppa.jamppaTormaa) {
@@ -241,16 +207,21 @@ public class PeliRuutu implements Screen {
                             tormaysMaara++;
                             hitSound.play();
 
-                        }  else if (este.getTyyppi() == "ruoho"){
+                        }  else if (este.getTyyppi() == "ruoho"){   // jos osutaan nurmeen, lisätään leikattujen laskuriin kerran
+                            if (!este.getLeikattu()) {
+                                nurmeaLeikattu += 1;
+                                este.setLeikattu(true);
+                            }
 
-                            Log.d("TAG", "l e i k a t t u    :   "+este.getLeikattu()+ "  tyyppi  :" + este.getTyyppi());
-
-                            este.setLeikattu(true);
+                        }  else if (este.getTyyppi() == "kolikko"){
+                            iter.remove();
+                            // kolikko sound
+                            // pointseja
+                            kerätytKolikot += 1;
                         }
-
-
                     }
                 }
+                // ----------------------------------------------------------------------------------
             }
 
             // liikuta taustaobjekteja (puurivistö), poista ruudun ulkopuolella
@@ -301,6 +272,7 @@ public class PeliRuutu implements Screen {
         Este este = new Este();
         esteet.add(este);
         esteEsiinAika = TimeUtils.nanoTime();
+        if (este.getTyyppi() == "ruoho") nurmiPotentiaali +=1;  // otetaan talteen nurmikon määrä
     }
 
     // tuodaan tausta ruudun yläosaam
@@ -337,34 +309,27 @@ public class PeliRuutu implements Screen {
             game.batch.draw(tausta.getEsteKuva(), tausta.getX(), tausta.getY());
         }
 
-        // piirrä kolikko
-
-
         // piirrä esteet
         for (Este este : esteet) {
             game.batch.draw(este.getEsteKuva(), este.getX(), este.getY());
         }
 
         // piirrä Jamppa
-
-        stateTime += Gdx.graphics.getDeltaTime(); // Accumulate elapsed animation time
-        TextureRegion jamppaFrame = walkAnimation.getKeyFrame(stateTime, true);
-        game.batch.draw(jamppaFrame,  jamppa.getX(), jamppa.getY()); // Draw current frame at (50, 50)
-
-
-
+        game.batch.draw(jamppa.getJamppaKuva(),  jamppa.getX(), jamppa.getY()); // Draw current frame at (50, 50)
 
         // piirrä ruohonleikkuri
+
+        game.batch.draw(leikkuri,  jamppa.getX()+50, jamppa.getY()); // Draw current frame at (50, 50)
+
 
         // SAVU-efektin sijainnin update ja piirto, jos Jamppa törmää
         if (jamppa.jamppaTormaa) {
             pe.update(Gdx.graphics.getDeltaTime());
-            pe.setPosition(jamppa.getX() + 50, jamppa.getY() + 10);  // set the position
+            pe.setPosition(jamppa.getX() + 100, jamppa.getY() + 20);  // set the position
             pe.draw(game.batch, Gdx.graphics.getDeltaTime()); // draw it
         }
 
     }
-
 
 
     @Override
@@ -393,7 +358,7 @@ public class PeliRuutu implements Screen {
     @Override // SpriteBatches and Textures must always be disposed
     public void dispose() {
         este.getEsteKuva().dispose();
-        jamppa.getJamppaKuva().dispose();
+        jamppa.jampanJuoksu.dispose();
         taivaskuva.dispose();
         hitSound.dispose();
         // rainMusic.dispose();

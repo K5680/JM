@@ -21,38 +21,53 @@ public class Este {
     private float xMin;
     private float yMin;
     private Rectangle esteRect;
-    public String tyyppi;
+    public String tyyppi = " ";
     private boolean leikattu;
     public Texture ruohoLeikattu;
+
 
     public Este() {
 
         // lataa estekuva, arpomalla tyyppi
-        esteTyyppi = MathUtils.random(0,2);
+        esteTyyppi = MathUtils.random(0,17);
         switch (esteTyyppi) {
             case 0:
-                esteKuva = new Texture(Gdx.files.internal("kivi.png"));
-                tyyppi = "kivi";
-                break;
             case 1:
             case 2:
             case 3:
             case 4:
             case 5:
+                esteKuva = new Texture(Gdx.files.internal("ruoho2.png"));
+                tyyppi = "ruoho";
+                break;
             case 6:
             case 7:
             case 8:
             case 9:
             case 10:
             case 11:
+            case 12:
                 esteKuva = new Texture(Gdx.files.internal("ruoho.png"));
                 tyyppi = "ruoho";
                 break;
-            case 12:
+            case 13:
+            case 14:
+                esteKuva = new Texture(Gdx.files.internal("latakko.png"));
+                tyyppi = "latakko";
+                break;
+            case 15:
+            case 16:
+                esteKuva = new Texture(Gdx.files.internal("kivi.png"));
+                tyyppi = "kivi";
+                break;
+            case 17:
                 esteKuva = new Texture(Gdx.files.internal("kolikko.png"));
                 tyyppi = "kolikko";
                 break;
         }
+
+                                                // LISÄÄ NITROT!
+
 
         // tähän ehkä parempi systeemi? taulukko? samasta kuvasta framet?
         ruohoLeikattu = new Texture(Gdx.files.internal("ruoho_leikattu.png"));
@@ -69,7 +84,6 @@ public class Este {
         esteRect.height = esteKuva.getHeight();
         esteRect.x = x;
         esteRect.y = y;
-
         leikattu = false;
     }
 
@@ -84,7 +98,6 @@ public class Este {
     public void setLeikattu(boolean leik){
         leikattu = leik;
     }
-
 
     public void setX(float xi) {
 

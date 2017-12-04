@@ -4,6 +4,8 @@ import android.util.Log;
 
 import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.graphics.Texture;
+import com.badlogic.gdx.graphics.g2d.Animation;
+import com.badlogic.gdx.graphics.g2d.TextureRegion;
 import com.badlogic.gdx.math.Rectangle;
 import com.badlogic.gdx.utils.TimeUtils;
 
@@ -13,7 +15,6 @@ import com.badlogic.gdx.utils.TimeUtils;
 
 public class Jamppa {
 
-    private Texture jamppaKuva;
     Rectangle jamppa;
     private float x;
     private float y;
@@ -25,19 +26,47 @@ public class Jamppa {
     public boolean jamppaTormaa = false;
     public long jamppaMaissa;
 
+    //animaatio
+    private float stateTime;    // animaation nopeus
+    private static final int FRAME_COLS = 3, FRAME_ROWS = 2;
+    Animation<TextureRegion> walkAnimation; // frame type = textureregion
+    Texture jampanJuoksu;
+    TextureRegion jamppaKuva;
+
+
     public Jamppa() {
         // lataa jampan kuva
-        jamppaKuva = new Texture(Gdx.files.internal("jamppa.png"));
+
+
+        // Load the sprite sheet as a Texture
+        jampanJuoksu = new Texture(Gdx.files.internal("jamppa_anim.png"));
+
+        TextureRegion[][] tmp = TextureRegion.split(jampanJuoksu,
+                jampanJuoksu.getWidth() / FRAME_COLS,
+                jampanJuoksu.getHeight() / FRAME_ROWS);
+
+        TextureRegion[] walkFrames = new TextureRegion[FRAME_COLS * FRAME_ROWS];
+        int index = 0;
+        for (int i = 0; i < FRAME_ROWS; i++) {
+            for (int j = 0; j < FRAME_COLS; j++) {
+                walkFrames[index++] = tmp[i][j];
+            }
+        }
+        walkAnimation = new Animation<TextureRegion>(0.1f, walkFrames);
+        TextureRegion jamppaKuva = walkAnimation.getKeyFrame(stateTime, true);
+
+
         jamppaRect = new Rectangle();               // rect, jonka törmäyksiä esteisiin tarkkaillaan
         x =  100;
         y = 20; // bottom left corner of the jamppa is 20 pixels above the bottom screen edge
-        jamppaRect.width = jamppaKuva.getWidth()/2; // rect koko, säädettävä kohdalleen
+        jamppaRect.width = 30; // rect koko, säädettävä kohdalleen
         jamppaRect.height =  30;                    // rect koko, säädettävä kohdalleen
         xMin = -64;
         yMin = 0;
         xMax = 200;
         yMax = JamppaMaalla.Puuraja;    // yläreuna jampan liikkumisessa
 
+        stateTime = 0f; // Instantiate a SpriteBatch for drawing and reset the elapsed animation time to 0
     }
 
     public Rectangle getJamppaRect() {
@@ -53,7 +82,7 @@ public class Jamppa {
             xi = xMax - 64;
        // Log.d("X", "setX: "+x+"   xMax"+xMax);
         x = xi;
-        jamppaRect.x = xi;
+        jamppaRect.x = xi+30;
     }
 
     public void setY(float yi) {
@@ -65,7 +94,7 @@ public class Jamppa {
 
        // Log.d("Y", "setY: "+y);
         y = yi;
-        jamppaRect.y = yi;
+        jamppaRect.y = yi+10;
     }
 
 
@@ -84,8 +113,11 @@ public class Jamppa {
         return y;
     }
 
-    public Texture getJamppaKuva() {
+    public TextureRegion getJamppaKuva() {
+        stateTime += Gdx.graphics.getDeltaTime(); // Accumulate elapsed animation time
+        TextureRegion jamppaKuva = walkAnimation.getKeyFrame(stateTime, true);
         return jamppaKuva;
+
     }
 
 }
