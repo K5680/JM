@@ -29,16 +29,13 @@ public class Jamppa {
     //animaatio
     private float stateTime;    // animaation nopeus
     private static final int FRAME_COLS = 3, FRAME_ROWS = 2;
-    Animation<TextureRegion> walkAnimation; // frame type = textureregion
+    private Animation<TextureRegion> walkAnimation; // frame type = textureregion
     Texture jampanJuoksu;
     TextureRegion jamppaKuva;
 
 
     public Jamppa() {
-        // lataa jampan kuva
-
-
-        // Load the sprite sheet as a Texture
+        // lataa jampan kuva, "leikataan" kuvasta framet
         jampanJuoksu = new Texture(Gdx.files.internal("jamppa_anim.png"));
 
         TextureRegion[][] tmp = TextureRegion.split(jampanJuoksu,
@@ -52,6 +49,7 @@ public class Jamppa {
                 walkFrames[index++] = tmp[i][j];
             }
         }
+
         walkAnimation = new Animation<TextureRegion>(0.1f, walkFrames);
         TextureRegion jamppaKuva = walkAnimation.getKeyFrame(stateTime, true);
 

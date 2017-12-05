@@ -39,7 +39,7 @@ public class PeliRuutu implements Screen {
     private Este este;
     private Tausta tausta;
     private long taustaIntervalli = 1000;
-    private long perusVauhti = 300;
+    private long perusVauhti = 250;
     private long esteVauhti = perusVauhti;
     private long maisemaVauhti = perusVauhti-50;
 
@@ -48,6 +48,7 @@ public class PeliRuutu implements Screen {
     private long maisemaEsiinAika;
     private int tormaysMaara;
     private Jamppa jamppa;
+    private Ruohonleikkuri leikkuri;
 
     private Stage stage; // onko oltava?
     private ParticleEffect pe;  // savu- ym efektit
@@ -58,7 +59,7 @@ public class PeliRuutu implements Screen {
     private double prosentti;
     private double nurmiPotentiaali;
 
-    Texture leikkuri;                                                       // '****
+
 
     public PeliRuutu(final JamppaMaalla peli, Screen parent) {
         this.parent = parent;
@@ -67,8 +68,8 @@ public class PeliRuutu implements Screen {
 
         // Jamppa kehiin
         jamppa = new Jamppa();
+        leikkuri = new Ruohonleikkuri();
 
-        leikkuri = new Texture(Gdx.files.internal("leikkuri.png"));     //****
 
         // partikkeliefektit
         pe = new ParticleEffect();
@@ -121,25 +122,30 @@ public class PeliRuutu implements Screen {
         game.batch.setProjectionMatrix(kamera.combined);    // tell the SpriteBatch to render in the coordinate system specified by the camera
 
 
-        Pixmap pixmap = new Pixmap(30,30, Pixmap.Format.RGBA8888);
-        Texture texture = new Texture(pixmap);
-
-
+           Pixmap pixmap = new Pixmap(20,20, Pixmap.Format.RGBA8888);        // testikäyttöön neliö
+           Texture texture = new Texture(pixmap);
 
         if (nurmeaLeikattu > 0) prosentti =  100*(nurmeaLeikattu/nurmiPotentiaali); // lasketaan paljonko nurmea leikattu prosentuaalisesti
         double round = Math.pow(10,1);
         prosentti = Math.round(prosentti*round)/round;
+
+
+
 
         // aloita "batch", piirrä "Jamppa" ja esteet ym                    // BATCH BEGIN
         game.batch.begin();
             piirraObjektit(); // objektit ruutuun
             game.font.draw(game.batch, "Törmäilyt: " + tormaysMaara + "  Leikkaustarkkuus:  " + prosentti + "  Kolikot: " + kerätytKolikot, 0, 480); // teksti ruutuun
 
-            // Gdx.app.log("tag","msg");
+            Gdx.app.log("tag","msg");
             pixmap.setColor(1,1,0,100);
-            pixmap.fillRectangle(0,0,30,30);
+            pixmap.fillRectangle(0,0,20,20);
             texture.draw(pixmap,0,0);
-            game.batch.draw(texture, jamppa.getX()+30,jamppa.getY()+10, 30,30);
+
+
+
+           game.batch.draw(texture, leikkuri.getX()+35,leikkuri.getY()+10, 20,20);
+
         game.batch.end();                                                   // BATCH END
 
 
@@ -147,15 +153,16 @@ public class PeliRuutu implements Screen {
 
 
         // Jamppa osuu esteeseen, pysäytetään ruudunvieritys, mitä tapahtuu jampalle?
-        if (jamppa.jamppaTormaa){
+        if (jamppa.jamppaTormaa || leikkuri.leikkuriTormaa){
 
             esteEsiinAika = TimeUtils.nanoTime();    // nollataan ajastimia
             taustatEsiinAika = TimeUtils.nanoTime(); // koska ei liikuta
             maisemaEsiinAika = TimeUtils.nanoTime();
             taustaIntervalli = TimeUtils.millisToNanos(MathUtils.random(1000, 5000));
 
-            if (TimeUtils.nanoTime() > jamppa.jamppaMaissa + TimeUtils.millisToNanos(1000)) {
+            if ((TimeUtils.nanoTime() > jamppa.jamppaMaissa + TimeUtils.millisToNanos(1000)) && (TimeUtils.nanoTime() > leikkuri.leikkuriMaissa + TimeUtils.millisToNanos(1000)) ) {
                 jamppa.jamppaTormaa = false;
+                leikkuri.leikkuriTormaa = false;
                 // jamppa must go on
                 esteVauhti = perusVauhti;
                 maisemaVauhti = perusVauhti-50;
@@ -207,6 +214,28 @@ public class PeliRuutu implements Screen {
                             tormaysMaara++;
                             hitSound.play();
 
+                        }  else if (este.getTyyppi() == "kolikko"){
+                            iter.remove();
+                            // kolikko sound
+                            // pointseja
+                            kerätytKolikot += 1;
+                        }
+                    }
+                }
+                // ----------------------------------------------------------------------------------
+                // ---------------------------------------------------------------------------------- LEIKKURI OSUU JOHONKIN
+                if (este.getEsteRect().overlaps(leikkuri.getleikkuriRect())) {
+
+                    if (!leikkuri.leikkuriTormaa) {
+
+                        if (este.getTyyppi() == "kivi") {   // tutkitaan mihin on osuttu
+                            leikkuri.leikkuriCrash();
+                            esteVauhti = 0;
+                            maisemaVauhti = 0;
+                            iter.remove();
+                            tormaysMaara++;
+                            hitSound.play();
+
                         }  else if (este.getTyyppi() == "ruoho"){   // jos osutaan nurmeen, lisätään leikattujen laskuriin kerran
                             if (!este.getLeikattu()) {
                                 nurmeaLeikattu += 1;
@@ -214,10 +243,7 @@ public class PeliRuutu implements Screen {
                             }
 
                         }  else if (este.getTyyppi() == "kolikko"){
-                            iter.remove();
-                            // kolikko sound
-                            // pointseja
-                            kerätytKolikot += 1;
+
                         }
                     }
                 }
@@ -255,6 +281,8 @@ public class PeliRuutu implements Screen {
                 jamppa.setX(touchPos.x - 64 / 2);
                 jamppa.setY(touchPos.y - 64 / 2);
 
+                leikkuri.setX(jamppa.getX()+50);   // leikkuri jamppan käteen
+                leikkuri.setY(jamppa.getY());
             }
 
 
@@ -318,17 +346,15 @@ public class PeliRuutu implements Screen {
         game.batch.draw(jamppa.getJamppaKuva(),  jamppa.getX(), jamppa.getY()); // Draw current frame at (50, 50)
 
         // piirrä ruohonleikkuri
-
-        game.batch.draw(leikkuri,  jamppa.getX()+50, jamppa.getY()); // Draw current frame at (50, 50)
+        game.batch.draw(leikkuri.getLeikkuriKuva(),  leikkuri.getX(), leikkuri.getY()); // Draw current frame at (50, 50)
 
 
         // SAVU-efektin sijainnin update ja piirto, jos Jamppa törmää
-        if (jamppa.jamppaTormaa) {
+        if (jamppa.jamppaTormaa ||leikkuri.leikkuriTormaa) {
             pe.update(Gdx.graphics.getDeltaTime());
             pe.setPosition(jamppa.getX() + 100, jamppa.getY() + 20);  // set the position
             pe.draw(game.batch, Gdx.graphics.getDeltaTime()); // draw it
         }
-
     }
 
 
