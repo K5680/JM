@@ -31,7 +31,7 @@ public class PeliRuutu implements Screen {
     private Texture taivaskuva;
     private OrthographicCamera kamera;
     private Sound hitSound;
-    Music omaMusic;
+    private Music jamppaMusic;
 
     private Array<Este> esteet;
     private Array<Tausta> taustat;
@@ -81,8 +81,8 @@ public class PeliRuutu implements Screen {
 
         // lataa äänet ja musiikki
         hitSound = Gdx.audio.newSound(Gdx.files.internal("244983__ani-music__ani-big-pipe-hit.wav"));
-        // rainMusic = Gdx.audio.newMusic(Gdx.files.internal("rain.mp3"));
-        // rainMusic.setLooping(true);
+        jamppaMusic = Gdx.audio.newMusic(Gdx.files.internal("old_folks_by_vesada.mp3"));
+        jamppaMusic.setLooping(true);
 
         // create the camera and the SpriteBatch
         kamera = new OrthographicCamera();
@@ -289,6 +289,7 @@ public class PeliRuutu implements Screen {
 
     if (Gdx.input.isKeyPressed(Keys.BACK)){
         // back-napilla takaisin main menuun
+        jamppaMusic.stop();
         game.setScreen(parent);
         //dispose(); // peliruutu poistoon
     }
@@ -366,7 +367,7 @@ public class PeliRuutu implements Screen {
     public void show() {
         // start the playback of the background music
         // when the screen is shown
-        //    omaMusic.play();
+        jamppaMusic.play();
     }
 
     @Override
@@ -387,7 +388,7 @@ public class PeliRuutu implements Screen {
         jamppa.jampanJuoksu.dispose();
         taivaskuva.dispose();
         hitSound.dispose();
-        // rainMusic.dispose();
+        jamppaMusic.dispose();
     }
 
 }
