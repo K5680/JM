@@ -35,24 +35,7 @@ public class Jamppa {
 
 
     public Jamppa() {
-        // lataa jampan kuva, "leikataan" kuvasta framet
-        jampanJuoksu = new Texture(Gdx.files.internal("jamppa_anim.png"));
-
-        TextureRegion[][] tmp = TextureRegion.split(jampanJuoksu,
-                jampanJuoksu.getWidth() / FRAME_COLS,
-                jampanJuoksu.getHeight() / FRAME_ROWS);
-
-        TextureRegion[] walkFrames = new TextureRegion[FRAME_COLS * FRAME_ROWS];
-        int index = 0;
-        for (int i = 0; i < FRAME_ROWS; i++) {
-            for (int j = 0; j < FRAME_COLS; j++) {
-                walkFrames[index++] = tmp[i][j];
-            }
-        }
-
-        walkAnimation = new Animation<TextureRegion>(0.1f, walkFrames);
-        TextureRegion jamppaKuva = walkAnimation.getKeyFrame(stateTime, true);
-
+        lataaFreimit();
 
         jamppaRect = new Rectangle();               // rect, jonka törmäyksiä esteisiin tarkkaillaan
         x =  100;
@@ -117,5 +100,26 @@ public class Jamppa {
         return jamppaKuva;
 
     }
+
+public void lataaFreimit() {
+    // lataa jampan kuva, "leikataan" kuvasta framet
+    jampanJuoksu = new Texture(Gdx.files.internal("jamppa_anim.png"));
+
+    TextureRegion[][] tmp = TextureRegion.split(jampanJuoksu,
+            jampanJuoksu.getWidth() / FRAME_COLS,
+            jampanJuoksu.getHeight() / FRAME_ROWS);
+
+    TextureRegion[] walkFrames = new TextureRegion[FRAME_COLS * FRAME_ROWS];
+    int index = 0;
+    for (int i = 0; i < FRAME_ROWS; i++) {
+        for (int j = 0; j < FRAME_COLS; j++) {
+            walkFrames[index++] = tmp[i][j];
+        }
+    }
+
+    walkAnimation = new Animation<TextureRegion>(0.1f, walkFrames);
+    TextureRegion jamppaKuva = walkAnimation.getKeyFrame(stateTime, true);
+
+}
 
 }

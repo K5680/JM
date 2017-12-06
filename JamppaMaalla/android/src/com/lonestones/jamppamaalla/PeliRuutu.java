@@ -122,8 +122,8 @@ public class PeliRuutu implements Screen {
         game.batch.setProjectionMatrix(kamera.combined);    // tell the SpriteBatch to render in the coordinate system specified by the camera
 
 
-           Pixmap pixmap = new Pixmap(20,20, Pixmap.Format.RGBA8888);        // testikäyttöön neliö
-           Texture texture = new Texture(pixmap);
+           Pixmap pixmap = new Pixmap(leikkuri.getRectxW(),leikkuri.getRectyW(), Pixmap.Format.RGBA8888);        // testikäyttöön neliö
+           Texture tarkistusnelio = new Texture(pixmap);
 
         if (nurmeaLeikattu > 0) prosentti =  100*(nurmeaLeikattu/nurmiPotentiaali); // lasketaan paljonko nurmea leikattu prosentuaalisesti
         double round = Math.pow(10,1);
@@ -137,14 +137,13 @@ public class PeliRuutu implements Screen {
             piirraObjektit(); // objektit ruutuun
             game.font.draw(game.batch, "Törmäilyt: " + tormaysMaara + "  Leikkaustarkkuus:  " + prosentti + "  Kolikot: " + kerätytKolikot, 0, 480); // teksti ruutuun
 
+            // väliaikainen testineliö törmäyksille
             Gdx.app.log("tag","msg");
-            pixmap.setColor(1,1,0,100);
-            pixmap.fillRectangle(0,0,20,20);
-            texture.draw(pixmap,0,0);
+            pixmap.setColor(100,50,0,100);
+            pixmap.fillRectangle(0,0,leikkuri.getRectxW(),leikkuri.getRectyW());
+            tarkistusnelio.draw(pixmap,0,0);
 
-
-
-           game.batch.draw(texture, leikkuri.getX()+35,leikkuri.getY()+10, 20,20);
+           game.batch.draw(tarkistusnelio, leikkuri.getX()+leikkuri.getHienosaatoX(),leikkuri.getY()+leikkuri.getHienosaatoY(), leikkuri.getRectxW(),leikkuri.getRectyW());
 
         game.batch.end();                                                   // BATCH END
 
@@ -170,6 +169,19 @@ public class PeliRuutu implements Screen {
                 //     if (pe.isComplete())   // effect reset, tarpeen?
                 }
 
+        } else {
+            //                 Kosketusnäyttö/näppäintoiminnot - - - - - - - - - - - - - - - - - -
+            if (!jamppa.jamppaTormaa && Gdx.input.isTouched()) {
+                Vector3 touchPos = new Vector3();
+                touchPos.set(Gdx.input.getX(), Gdx.input.getY(), 0);
+
+                kamera.unproject(touchPos);
+                jamppa.setX(touchPos.x - 64 / 2);
+                jamppa.setY(touchPos.y - 64 / 2);
+
+                leikkuri.setX(leikkuri.getX());//jamppa.getX()+50);   // leikkuri jamppan käteen
+                leikkuri.setY(jamppa.getY());
+            }
         }
 
 
@@ -269,21 +281,7 @@ public class PeliRuutu implements Screen {
                     iter3.remove();
             }
 
-
             // ------------<   ESTEIDEN HALLINTA  <-----------------------------------------------
-
-            //                 Kosketusnäyttö/näppäintoiminnot - - - - - - - - - - - - - - - - - -
-            if (!jamppa.jamppaTormaa && Gdx.input.isTouched()) {
-                Vector3 touchPos = new Vector3();
-                touchPos.set(Gdx.input.getX(), Gdx.input.getY(), 0);
-
-                kamera.unproject(touchPos);
-                jamppa.setX(touchPos.x - 64 / 2);
-                jamppa.setY(touchPos.y - 64 / 2);
-
-                leikkuri.setX(jamppa.getX()+50);   // leikkuri jamppan käteen
-                leikkuri.setY(jamppa.getY());
-            }
 
 
 
@@ -353,7 +351,7 @@ public class PeliRuutu implements Screen {
         // SAVU-efektin sijainnin update ja piirto, jos Jamppa törmää
         if (jamppa.jamppaTormaa ||leikkuri.leikkuriTormaa) {
             pe.update(Gdx.graphics.getDeltaTime());
-            pe.setPosition(jamppa.getX() + 100, jamppa.getY() + 20);  // set the position
+            pe.setPosition(jamppa.getX() + 115, jamppa.getY() + 20);  // set the position
             pe.draw(game.batch, Gdx.graphics.getDeltaTime()); // draw it
         }
     }

@@ -78,7 +78,7 @@ public class Este {
         x = 800;
         xMin = -100;
 
-        // tee esteen rectangle
+        // tee esteen rectangle saman kokoiseksi kuin kuva
         esteRect = new Rectangle();
         esteRect.width = esteKuva.getWidth();
         esteRect.height = esteKuva.getHeight();
