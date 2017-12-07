@@ -52,6 +52,7 @@ public class PeliRuutu implements Screen {
 
     private Stage stage; // onko oltava?
     private ParticleEffect pe;  // savu- ym efektit
+    private ParticleEffect vesi;
 
     public static boolean peliAlkaaNyt = true; // eka käynnistys
     private double nurmeaLeikattu;
@@ -69,12 +70,16 @@ public class PeliRuutu implements Screen {
         // Jamppa kehiin
         jamppa = new Jamppa();
         leikkuri = new Ruohonleikkuri();
-
+        leikkuri.setX(jamppa.getX());   // leikkuri jamppan käteen
+        leikkuri.setY(jamppa.getY());
 
         // partikkeliefektit
         pe = new ParticleEffect();
-        pe.load(Gdx.files.internal("tuliefekti2.p"),Gdx.files.internal(""));
+        pe.load(Gdx.files.internal("tuliefekti3.p"),Gdx.files.internal(""));
         pe.getEmitters().first().setPosition(Gdx.graphics.getWidth()/2,Gdx.graphics.getHeight()/2);
+        vesi = new ParticleEffect();
+        vesi.load(Gdx.files.internal("vesiefekti2.p"),Gdx.files.internal(""));
+        vesi.getEmitters().first().setPosition(Gdx.graphics.getWidth()/2,Gdx.graphics.getHeight()/2);
 
         // otetaan "back" -nappula haltuun
         Gdx.input.setCatchBackKey(true);
@@ -100,6 +105,7 @@ public class PeliRuutu implements Screen {
         esteEsiin();
         taustatEsiin();
         pe.start();
+        vesi.start();
         peliAlkaaNyt = false;
     }
 
@@ -166,20 +172,21 @@ public class PeliRuutu implements Screen {
                 esteVauhti = perusVauhti;
                 maisemaVauhti = perusVauhti-50;
                 pe.reset(); // savuefektin resetointi
+                vesi.reset();
                 //     if (pe.isComplete())   // effect reset, tarpeen?
                 }
 
         } else {
             //                 Kosketusnäyttö/näppäintoiminnot - - - - - - - - - - - - - - - - - -
-            if (!jamppa.jamppaTormaa && Gdx.input.isTouched()) {
+            if (Gdx.input.isTouched()) {
                 Vector3 touchPos = new Vector3();
                 touchPos.set(Gdx.input.getX(), Gdx.input.getY(), 0);
 
                 kamera.unproject(touchPos);
-                jamppa.setX(touchPos.x - 64 / 2);
+                jamppa.setX(touchPos.x - 64 / 2); // jamppa vastaamaan kosketusnäytön ohjausta
                 jamppa.setY(touchPos.y - 64 / 2);
 
-                leikkuri.setX(leikkuri.getX());//jamppa.getX()+50);   // leikkuri jamppan käteen
+                leikkuri.setX(jamppa.getX());   // leikkuri jamppan käteen
                 leikkuri.setY(jamppa.getY());
             }
         }
@@ -241,7 +248,7 @@ public class PeliRuutu implements Screen {
                     if (!leikkuri.leikkuriTormaa) {
 
                         if (este.getTyyppi() == "kivi") {   // tutkitaan mihin on osuttu
-                            leikkuri.leikkuriCrash();
+                            leikkuri.leikkuriCrash(este.getTyyppi());   // viedään osuman tyyppi leikkuriluokkaan
                             esteVauhti = 0;
                             maisemaVauhti = 0;
                             iter.remove();
@@ -256,6 +263,8 @@ public class PeliRuutu implements Screen {
 
                         }  else if (este.getTyyppi() == "kolikko"){
 
+                        } else if (este.getTyyppi() == "latakko"){
+                            leikkuri.leikkuriCrash(este.getTyyppi());
                         }
                     }
                 }
@@ -350,9 +359,15 @@ public class PeliRuutu implements Screen {
 
         // SAVU-efektin sijainnin update ja piirto, jos Jamppa törmää
         if (jamppa.jamppaTormaa ||leikkuri.leikkuriTormaa) {
-            pe.update(Gdx.graphics.getDeltaTime());
-            pe.setPosition(jamppa.getX() + 115, jamppa.getY() + 20);  // set the position
-            pe.draw(game.batch, Gdx.graphics.getDeltaTime()); // draw it
+            if ((leikkuri.getOsumaTyyppi() == "latakko") && !(jamppa.jamppaTormaa)) {
+                vesi.update(Gdx.graphics.getDeltaTime());
+                vesi.setPosition(leikkuri.getX() + 100, leikkuri.getY() + 20);  // set the position
+                vesi.draw(game.batch, Gdx.graphics.getDeltaTime()); // draw it
+            } else {
+                pe.update(Gdx.graphics.getDeltaTime());
+                pe.setPosition(leikkuri.getX() + 100, leikkuri.getY() + 20);  // set the position
+                pe.draw(game.batch, Gdx.graphics.getDeltaTime()); // draw it
+            }
         }
     }
 

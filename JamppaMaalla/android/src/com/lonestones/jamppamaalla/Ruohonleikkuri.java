@@ -45,20 +45,18 @@ public class Ruohonleikkuri {
         return rectyW;
     }
 
-    private int hienosaatoX = 35;
-    private int hienosaatoY = 10;
+    private int hienosaatoX = 0;    // rectin säätämiseen tarkemmin oikaan kohtaan
+    private int hienosaatoY = 0;
     private int rectxW;
     private int rectyW;
-
+    private String osumaTyyppi;
 
 
     public Ruohonleikkuri() {
         leikkuriRect = new Rectangle(); // Leikkurin rect, jonka törmäyksiä esteisiin tarkkaillaan
-        setTaso(3);     // Ladataan leikkurin freimit, samaa funktiota käytetään kun myöhemmin päivitetään leikkurin malli
-
-        x =  100;
-        y = 20;         // bottom left corner of the jamppa is 20 pixels above the bottom screen edge
-
+        setTaso(0);     // Ladataan leikkurin freimit, samaa funktiota käytetään kun myöhemmin päivitetään leikkurin malli
+        setX(100);
+        setY(20);
         stateTime = 0f; // Instantiate a SpriteBatch for drawing and reset the elapsed animation time to 0
     }
 
@@ -69,20 +67,23 @@ public class Ruohonleikkuri {
     }
 
     public void setX(float xi) {
-        x = xi+hienosaatoX;
-        leikkuriRect.x = xi;    // säädetään rect leikkurin mukaan paremmin kohdalleen
+        x = xi;
+        leikkuriRect.x = xi+hienosaatoX;    // säädetään rect leikkurin mukaan paremmin kohdalleen
     }
 
     public void setY(float yi) {
-        y = yi+hienosaatoY;
-        leikkuriRect.y = yi;
+        y = yi;
+        leikkuriRect.y = yi+hienosaatoY;
     }
 
+    public String getOsumaTyyppi() {
+        return osumaTyyppi;
+    }
 
-    public void leikkuriCrash() {
+    public void leikkuriCrash(String osuma) {
         leikkuriTormaa = true;
         leikkuriMaissa = TimeUtils.nanoTime();
-
+        osumaTyyppi = osuma;
     }
 
     public void setTaso(int leikkurinTyyppi) {
@@ -94,25 +95,29 @@ public class Ruohonleikkuri {
                 leikkuriLiikeKuva = new Texture(Gdx.files.internal("leikkuri_anim.png"));
                 rectxW = 20;    // rect koko
                 rectyW = 15;    //
-                hienosaatoX = 35;
+                hienosaatoX = 80;
+                hienosaatoY = 10;
                 break;
             case 1:
                 leikkuriLiikeKuva = new Texture(Gdx.files.internal("leikkuri2_anim.png"));
                 rectxW = 40;    // rect koko
                 rectyW = 15;    //
-                hienosaatoX = 35;
+                hienosaatoX = 78;
+                hienosaatoY = 10;
                 break;
             case 2:
                 leikkuriLiikeKuva = new Texture(Gdx.files.internal("leikkuri3_anim.png"));
                 rectxW = 40;    // rect koko
                 rectyW = 20;    //
-                hienosaatoX = 35;
+                hienosaatoX = 73;
+                hienosaatoY = 10;
                 break;
             case 3:
                 leikkuriLiikeKuva = new Texture(Gdx.files.internal("leikkuri4_anim.png"));
-                rectxW = 40;    // rect koko
-                rectyW = 20;    //
-                hienosaatoX = 0;
+                rectxW = 45;    // rect koko
+                rectyW = 25;    //
+                hienosaatoX = 35;
+                hienosaatoY = 10;
                 break;
         }
 
