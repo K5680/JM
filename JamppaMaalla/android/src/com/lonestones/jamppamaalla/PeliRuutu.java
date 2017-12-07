@@ -59,6 +59,8 @@ public class PeliRuutu implements Screen {
     private int kerätytKolikot;
     private double prosentti;
     private double nurmiPotentiaali;
+    private boolean lopunAlku;  // kentän vaihtuminen
+    private int kentassaNurmikoita = 100;
 
 
 
@@ -66,6 +68,11 @@ public class PeliRuutu implements Screen {
         this.parent = parent;
         this.game = peli;
        // stage = new Stage(new ScreenViewport()); // onko oltava?
+
+        // TODO: kaupparuutu
+        // TODO: kentät
+        // TODO: pelin loppuminen
+        // TODO: ennätys
 
         // Jamppa kehiin
         jamppa = new Jamppa();
@@ -112,8 +119,6 @@ public class PeliRuutu implements Screen {
 
 
 
-
-
     @Override
     public void render(float delta) {
 
@@ -128,8 +133,10 @@ public class PeliRuutu implements Screen {
         game.batch.setProjectionMatrix(kamera.combined);    // tell the SpriteBatch to render in the coordinate system specified by the camera
 
 
-           Pixmap pixmap = new Pixmap(leikkuri.getRectxW(),leikkuri.getRectyW(), Pixmap.Format.RGBA8888);        // testikäyttöön neliö
+        /*   Pixmap pixmap = new Pixmap(leikkuri.getRectxW(),leikkuri.getRectyW(), Pixmap.Format.RGBA8888);        // testikäyttöön neliö
            Texture tarkistusnelio = new Texture(pixmap);
+        */
+
 
         if (nurmeaLeikattu > 0) prosentti =  100*(nurmeaLeikattu/nurmiPotentiaali); // lasketaan paljonko nurmea leikattu prosentuaalisesti
         double round = Math.pow(10,1);
@@ -137,20 +144,20 @@ public class PeliRuutu implements Screen {
 
 
 
-
         // aloita "batch", piirrä "Jamppa" ja esteet ym                    // BATCH BEGIN
         game.batch.begin();
             piirraObjektit(); // objektit ruutuun
-            game.font.draw(game.batch, "Törmäilyt: " + tormaysMaara + "  Leikkaustarkkuus:  " + prosentti + "  Kolikot: " + kerätytKolikot, 0, 480); // teksti ruutuun
+            // tekstit ruutuun
+            game.font.draw(game.batch, "Törmäilyt: " + tormaysMaara + "  Leikkaustarkkuus:  " + prosentti + "/" + kentassaNurmikoita+  "  Kolikot: " + kerätytKolikot, 0, 480);
 
-            // väliaikainen testineliö törmäyksille
+        /*  // väliaikainen testineliö törmäyksille
             Gdx.app.log("tag","msg");
             pixmap.setColor(100,50,0,100);
             pixmap.fillRectangle(0,0,leikkuri.getRectxW(),leikkuri.getRectyW());
             tarkistusnelio.draw(pixmap,0,0);
 
            game.batch.draw(tarkistusnelio, leikkuri.getX()+leikkuri.getHienosaatoX(),leikkuri.getY()+leikkuri.getHienosaatoY(), leikkuri.getRectxW(),leikkuri.getRectyW());
-
+        */
         game.batch.end();                                                   // BATCH END
 
 
@@ -191,18 +198,27 @@ public class PeliRuutu implements Screen {
             }
         }
 
-
             // ------------>   ESTEIDEN HALLINTA  >-----------------------------------------------
-            // tehdään uusi este jos aikaa kulunut tarpeeksi
-            if (TimeUtils.nanoTime() - esteEsiinAika > 250000000) {
-                esteEsiin();
-                esteEsiinAika = TimeUtils.nanoTime();
+            if (nurmiPotentiaali < kentassaNurmikoita) {    // lisätään esteitä kunnes "pelto" loppuu
+                // tehdään uusi este jos aikaa kulunut tarpeeksi
+                if (TimeUtils.nanoTime() - esteEsiinAika > 250000000) {
+                    esteEsiin();
+                    esteEsiinAika = TimeUtils.nanoTime();
+                }
+                // taustan kuvat
+                if (TimeUtils.nanoTime() - taustatEsiinAika > TimeUtils.millisToNanos(600)) {
+                    taustatEsiin();
+                    taustatEsiinAika = TimeUtils.nanoTime();
+                }
+            } else {
+                if (!lopunAlku) {
+                    taustatEsiinAika = TimeUtils.nanoTime();
+                    lopunAlku = true;
+                }
+              //  if (TimeUtils.nanoTime() - taustatEsiinAika > TimeUtils.millisToNanos(2000))
+                    // TODO väliRuutu();
             }
-            // taustan kuvat
-            if (TimeUtils.nanoTime() - taustatEsiinAika > TimeUtils.millisToNanos(600)) {
-                taustatEsiin();
-                taustatEsiinAika = TimeUtils.nanoTime();
-            }
+
             // maiseman kuvat
             if (TimeUtils.nanoTime() - maisemaEsiinAika > taustaIntervalli) {
                 maisemaEsiin();
@@ -289,9 +305,7 @@ public class PeliRuutu implements Screen {
                 if (tausta.getX() < tausta.getXMin() - 200)
                     iter3.remove();
             }
-
             // ------------<   ESTEIDEN HALLINTA  <-----------------------------------------------
-
 
 
     if (Gdx.input.isKeyPressed(Keys.BACK)){

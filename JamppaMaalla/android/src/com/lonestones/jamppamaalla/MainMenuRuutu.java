@@ -19,6 +19,8 @@ public class MainMenuRuutu implements Screen {
     OrthographicCamera camera;
     Texture alkuruutu;
 
+
+
     public MainMenuRuutu(final JamppaMaalla peli) {
         game = peli;
 
