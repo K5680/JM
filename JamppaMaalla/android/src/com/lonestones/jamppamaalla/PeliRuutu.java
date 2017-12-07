@@ -5,6 +5,8 @@ package com.lonestones.jamppamaalla;
  */
 
 
+import android.util.Log;
+
 import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.Input.Keys;
 import com.badlogic.gdx.Screen;
@@ -29,6 +31,7 @@ public class PeliRuutu implements Screen {
     private final Screen parent;         // MainMenuRuutu, jotta siihen voidaan palata
 
     private Texture taivaskuva;
+
     private OrthographicCamera kamera;
     private Sound hitSound;
     private Music jamppaMusic;
@@ -38,6 +41,11 @@ public class PeliRuutu implements Screen {
     private Array<Tausta> maisema;
     private Este este;
     private Tausta tausta;
+
+    private Iterator<Este> iter;
+    private Iterator<Tausta> iter2;
+    private Iterator<Tausta> iter3;
+
     private long taustaIntervalli = 1000;
     private long perusVauhti = 250;
     private long esteVauhti = perusVauhti;
@@ -59,8 +67,8 @@ public class PeliRuutu implements Screen {
     private int kerätytKolikot;
     private double prosentti;
     private double nurmiPotentiaali;
-    private boolean lopunAlku;  // kentän vaihtuminen
-    private int kentassaNurmikoita = 100;
+    private int lopunAlku;  // kentän vaihtuminen
+    private double kentassaNurmikoita = 100;
 
 
 
@@ -100,8 +108,7 @@ public class PeliRuutu implements Screen {
         kamera = new OrthographicCamera();
         kamera.setToOrtho(false, 800, 480);
 
-         // taivas ruudun yläreunaan
-        taivaskuva = new Texture(Gdx.files.internal("taivas2.png"));
+        taivaskuva = new Texture(Gdx.files.internal("taivas2.png"));         // taivas ruudun yläreunaan
 
         // luodaan "esteet"-taulukko  &  taustan "esteet"
         esteet = new Array<Este>();
@@ -109,7 +116,7 @@ public class PeliRuutu implements Screen {
         maisema = new Array<Tausta>(1);
 
         // ja spawnataan esteet esiin
-        esteEsiin();
+        esteEsiin(0);
         taustatEsiin();
         pe.start();
         vesi.start();
@@ -148,7 +155,7 @@ public class PeliRuutu implements Screen {
         game.batch.begin();
             piirraObjektit(); // objektit ruutuun
             // tekstit ruutuun
-            game.font.draw(game.batch, "Törmäilyt: " + tormaysMaara + "  Leikkaustarkkuus:  " + prosentti + "/" + kentassaNurmikoita+  "  Kolikot: " + kerätytKolikot, 0, 480);
+            game.font.draw(game.batch, "Törmäilyt: " + tormaysMaara + "  Leikkaustarkkuus:  " + prosentti + " ->" + nurmiPotentiaali + "/" + kentassaNurmikoita+  "  Kolikot: " + kerätytKolikot, 0, 480);
 
         /*  // väliaikainen testineliö törmäyksille
             Gdx.app.log("tag","msg");
@@ -178,31 +185,44 @@ public class PeliRuutu implements Screen {
                 // jamppa must go on
                 esteVauhti = perusVauhti;
                 maisemaVauhti = perusVauhti-50;
-                pe.reset(); // savuefektin resetointi
-                vesi.reset();
-                //     if (pe.isComplete())   // effect reset, tarpeen?
+                pe.reset();     // savuefektin resetointi
+                vesi.reset();   // vesiefektin resetointi
+                //     if (pe.isComplete())   // tarpeen?
                 }
 
         } else {
-            //                 Kosketusnäyttö/näppäintoiminnot - - - - - - - - - - - - - - - - - -
-            if (Gdx.input.isTouched()) {
-                Vector3 touchPos = new Vector3();
-                touchPos.set(Gdx.input.getX(), Gdx.input.getY(), 0);
+            if (lopunAlku < 3) {    // Kentän lopussa ei voi ohjata
+                //  Kosketusnäyttötoiminnot - - - - - - - - - - - - - - - - - -
+                if (Gdx.input.isTouched()) {
+                    Vector3 touchPos = new Vector3();
+                    touchPos.set(Gdx.input.getX(), Gdx.input.getY(), 0);
 
-                kamera.unproject(touchPos);
-                jamppa.setX(touchPos.x - 64 / 2); // jamppa vastaamaan kosketusnäytön ohjausta
-                jamppa.setY(touchPos.y - 64 / 2);
+                    kamera.unproject(touchPos);
+                    jamppa.setX(touchPos.x - 64 / 2); // jamppa vastaamaan kosketusnäytön ohjausta
+                    jamppa.setY(touchPos.y - 64 / 2);
 
+                    leikkuri.setX(jamppa.getX());   // leikkuri jamppan käteen
+                    leikkuri.setY(jamppa.getY());
+                }
+            } else if (lopunAlku < 4){    // Talliin automaattiohjaus
+                if (jamppa.getY() > 30) {
+                    jamppa.setY(jamppa.getY() - 5);
+                } else if (jamppa.getY() < 20) {
+                    jamppa.setY(jamppa.getY() + 5);
+                }
+
+                esteEsiinAika = TimeUtils.nanoTime();   // käytetään tässä jampan loppujuoksuun
                 leikkuri.setX(jamppa.getX());   // leikkuri jamppan käteen
                 leikkuri.setY(jamppa.getY());
             }
         }
 
+
             // ------------>   ESTEIDEN HALLINTA  >-----------------------------------------------
             if (nurmiPotentiaali < kentassaNurmikoita) {    // lisätään esteitä kunnes "pelto" loppuu
                 // tehdään uusi este jos aikaa kulunut tarpeeksi
                 if (TimeUtils.nanoTime() - esteEsiinAika > 250000000) {
-                    esteEsiin();
+                    esteEsiin(1);
                     esteEsiinAika = TimeUtils.nanoTime();
                 }
                 // taustan kuvat
@@ -210,16 +230,41 @@ public class PeliRuutu implements Screen {
                     taustatEsiin();
                     taustatEsiinAika = TimeUtils.nanoTime();
                 }
-            } else {
-                if (!lopunAlku) {
+            } else switch (lopunAlku) { // kentän loppuminen, talliin ajo ym.
+                case 0:
                     taustatEsiinAika = TimeUtils.nanoTime();
-                    lopunAlku = true;
-                }
-              //  if (TimeUtils.nanoTime() - taustatEsiinAika > TimeUtils.millisToNanos(2000))
+                    lopunAlku = 1;
+                    break;
+                case 1:
+                    if (TimeUtils.nanoTime() - taustatEsiinAika > TimeUtils.millisToNanos(2000)) {
+                        esteEsiin(18);  // tyyppi 18 = talli
+                        lopunAlku = 2;
+                        taustatEsiinAika = TimeUtils.nanoTime();
+                    }
+                    break;
+                case 2:     // viivästys tallin esiintulon jälkeen
+                    if (TimeUtils.nanoTime() - taustatEsiinAika > TimeUtils.millisToNanos(2000)) {
+                        lopunAlku = 3;
+                        taustatEsiinAika = TimeUtils.nanoTime();
+                    }
+                    break;
+                    // Case 3 tulee myös overlaps(talli):in kautta
+                case 3:
+                    if (TimeUtils.nanoTime() - taustatEsiinAika > TimeUtils.millisToNanos(1000))
+                       lopunAlku = 4;
+                    break;
+                case 4:
                     // TODO väliRuutu();
+                    leikkuri.leikkuriCrash("talli");   // viedään osuman tyyppi leikkuriluokkaan
+                  //  esteVauhti = 0;
+                  //  maisemaVauhti = 0;
+                    leikkuri.setX(-300);
+                    break;
             }
 
-            // maiseman kuvat
+
+
+        // maiseman kuvat
             if (TimeUtils.nanoTime() - maisemaEsiinAika > taustaIntervalli) {
                 maisemaEsiin();
                 maisemaEsiinAika = TimeUtils.nanoTime();
@@ -251,7 +296,7 @@ public class PeliRuutu implements Screen {
 
                         }  else if (este.getTyyppi() == "kolikko"){
                             iter.remove();
-                            // kolikko sound
+                            // TODO kolikko sound
                             // pointseja
                             kerätytKolikot += 1;
                         }
@@ -279,9 +324,16 @@ public class PeliRuutu implements Screen {
 
                         }  else if (este.getTyyppi() == "kolikko"){
 
-                        } else if (este.getTyyppi() == "latakko"){
+                        } else if (este.getTyyppi() == "latakko")
                             leikkuri.leikkuriCrash(este.getTyyppi());
-                        }
+                        } else if (este.getTyyppi() == "talli") {
+                            // TODO talli sound
+                            if (lopunAlku == 2) {   // seuraava kohta lopunAlku-switchissä, kun osutaan talliin
+                                lopunAlku = 3;
+                                kerätytKolikot += 1;
+                                taustatEsiinAika = TimeUtils.nanoTime();
+                                hitSound.play();
+                            }
                     }
                 }
                 // ----------------------------------------------------------------------------------
@@ -293,7 +345,7 @@ public class PeliRuutu implements Screen {
                 Este tausta = iter2.next();
                 tausta.setX(tausta.getX() - esteVauhti * Gdx.graphics.getDeltaTime());
                 // poista ruudun ulkopuolella
-                if (tausta.getX() < tausta.getXMin() - 150)
+                if (tausta.getX() < tausta.getXMin() - 300)
                     iter2.remove();
             }
             // liikuta maisemaa (pilvet ym)
@@ -302,7 +354,7 @@ public class PeliRuutu implements Screen {
                 Este tausta = iter3.next();
                 tausta.setX(tausta.getX() - maisemaVauhti * Gdx.graphics.getDeltaTime());
                 // poista ruudun ulkopuolella
-                if (tausta.getX() < tausta.getXMin() - 200)
+                if (tausta.getX() < tausta.getXMin() - 300)
                     iter3.remove();
             }
             // ------------<   ESTEIDEN HALLINTA  <-----------------------------------------------
@@ -318,8 +370,8 @@ public class PeliRuutu implements Screen {
 
 
     // tuodaan esteet ruutuun
-    public void esteEsiin() {
-        Este este = new Este();
+    public void esteEsiin(int tyyp) {
+        Este este = new Este(tyyp);
         esteet.add(este);
         esteEsiinAika = TimeUtils.nanoTime();
         if (este.getTyyppi() == "ruoho") nurmiPotentiaali +=1;  // otetaan talteen nurmikon määrä
@@ -359,16 +411,20 @@ public class PeliRuutu implements Screen {
             game.batch.draw(tausta.getEsteKuva(), tausta.getX(), tausta.getY());
         }
 
+        if (lopunAlku > 1)  {   // kentän lopussa talli piirretään jampan päälle, muut esteet alle
+            game.batch.draw(jamppa.getJamppaKuva(), jamppa.getX(), jamppa.getY());              // piirrä Jamppa-freimi
+            game.batch.draw(leikkuri.getLeikkuriKuva(),  leikkuri.getX(), leikkuri.getY());     // piirrä ruohonleikkuri
+        }
+
         // piirrä esteet
         for (Este este : esteet) {
             game.batch.draw(este.getEsteKuva(), este.getX(), este.getY());
         }
 
-        // piirrä Jamppa
-        game.batch.draw(jamppa.getJamppaKuva(),  jamppa.getX(), jamppa.getY()); // Draw current frame at (50, 50)
-
-        // piirrä ruohonleikkuri
-        game.batch.draw(leikkuri.getLeikkuriKuva(),  leikkuri.getX(), leikkuri.getY()); // Draw current frame at (50, 50)
+        if (lopunAlku < 2) {
+            game.batch.draw(jamppa.getJamppaKuva(), jamppa.getX(), jamppa.getY());              // piirrä Jamppa-freimi
+            game.batch.draw(leikkuri.getLeikkuriKuva(),  leikkuri.getX(), leikkuri.getY());     // piirrä ruohonleikkuri
+        }
 
 
         // SAVU-efektin sijainnin update ja piirto, jos Jamppa törmää

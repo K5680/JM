@@ -14,7 +14,7 @@ public class Tausta extends Este {
     private int tasot;
 
     public Tausta(int taso) {
-        super();
+        super(0);
         tasot = taso;
         tyyppi = "tausta";
 

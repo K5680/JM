@@ -26,10 +26,20 @@ public class Este {
     public Texture ruohoLeikattu;
 
 
-    public Este() {
+    public Este(int tyyp) {
+
+        // aseta x ja y (puuraja = yläreuna)
+        y = MathUtils.random(0, JamppaMaalla.Puuraja-100);
+        x = 800;
+        xMin = -100;
+
 
         // lataa estekuva, arpomalla tyyppi
-        esteTyyppi = MathUtils.random(0,17);
+        if (tyyp == 18)
+            esteTyyppi = 18;
+        else
+            esteTyyppi = MathUtils.random(0,17);
+
         switch (esteTyyppi) {
             case 0:
             case 1:
@@ -64,19 +74,21 @@ public class Este {
                 esteKuva = new Texture(Gdx.files.internal("kolikko.png"));
                 tyyppi = "kolikko";
                 break;
+            case 18:
+            // "maaliin" tullessa talli esille
+                esteKuva = new Texture(Gdx.files.internal("talli.png"));        // talli
+                x = 800;
+                y = 10;
+                tyyppi ="talli";
+                break;
         }
 
-                                                // LISÄÄ NITROT!
+        // TODO: LISÄÄ NITROT!
 
 
         // tähän ehkä parempi systeemi? taulukko? samasta kuvasta framet?
         ruohoLeikattu = new Texture(Gdx.files.internal("ruoho_leikattu.png"));
 
-
-        // aseta x ja y (puuraja = yläreuna)
-        y = MathUtils.random(0, JamppaMaalla.Puuraja-100);
-        x = 800;
-        xMin = -100;
 
         // tee esteen rectangle saman kokoiseksi kuin kuva
         esteRect = new Rectangle();
@@ -100,7 +112,6 @@ public class Este {
     }
 
     public void setX(float xi) {
-
         // pysy rajoissa
         if (x < xMin)
             x = xMin;
