@@ -373,7 +373,10 @@ Log.d("CASE    CASE    C>"," "+lopunAlku + " " +esteEsiinAika);
     if (Gdx.input.isKeyPressed(Keys.BACK)){
         // back-napilla takaisin main menuun
         jamppaMusic.stop();
-        game.setScreen(parent);
+
+        game.setScreen(new MainMenuRuutu(game));    // kummin TODO
+                    //game.setScreen(parent);
+
         //dispose(); // peliruutu poistoon
     }
 }

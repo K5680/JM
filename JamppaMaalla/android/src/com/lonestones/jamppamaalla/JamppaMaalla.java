@@ -2,8 +2,10 @@ package com.lonestones.jamppamaalla;
 
 
 import com.badlogic.gdx.Game;
+import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.graphics.g2d.BitmapFont;
 import com.badlogic.gdx.graphics.g2d.SpriteBatch;
+import com.badlogic.gdx.scenes.scene2d.ui.Skin;
 
 /**
  * Created by Vesada on 29.11.2017.
@@ -16,6 +18,7 @@ public class JamppaMaalla extends Game {
     public static final float Puuraja = 300;
     SpriteBatch batch;
     BitmapFont font;
+    public static Skin gameSkin;    // ladattiin napeille ym "skin"
 
 
     public void create() {
@@ -26,8 +29,13 @@ public class JamppaMaalla extends Game {
         font = new BitmapFont();
         font.getData().setScale(2,2);
 
+
+      gameSkin = new Skin(Gdx.files.internal("omaskin.json"));
+
         // uusi mainmenu ruutu
         this.setScreen(new MainMenuRuutu(this));
+
+       // this.setScreen(new TitleScreen(this));
     }
 
     public void render() {

@@ -42,7 +42,7 @@ public class Jamppa {
         y = 20; // bottom left corner of the jamppa is 20 pixels above the bottom screen edge
         jamppaRect.width = 30; // rect koko, säädettävä kohdalleen
         jamppaRect.height =  30;                    // rect koko, säädettävä kohdalleen
-        xMin = -64;
+        xMin = 50;
         yMin = 0;
         xMax = 200;
         yMax = JamppaMaalla.Puuraja;    // yläreuna jampan liikkumisessa
