@@ -17,6 +17,7 @@ public class JamppaMaalla extends Game {
     SpriteBatch batch;
     BitmapFont font;
 
+
     public void create() {
         // SpriteBatch is a special class that is used to draw 2D images
         batch = new SpriteBatch();

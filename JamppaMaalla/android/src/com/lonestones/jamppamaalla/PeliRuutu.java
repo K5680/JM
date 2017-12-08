@@ -172,7 +172,7 @@ public class PeliRuutu implements Screen {
 
 
         // Jamppa osuu esteeseen, pysäytetään ruudunvieritys, mitä tapahtuu jampalle?
-        if (jamppa.jamppaTormaa || leikkuri.leikkuriTormaa){
+        if ((jamppa.jamppaTormaa || leikkuri.leikkuriTormaa) && lopunAlku < 3){
 
             esteEsiinAika = TimeUtils.nanoTime();    // nollataan ajastimia
             taustatEsiinAika = TimeUtils.nanoTime(); // koska ei liikuta
@@ -211,7 +211,7 @@ public class PeliRuutu implements Screen {
                     jamppa.setY(jamppa.getY() + 5);
                 }
 
-                esteEsiinAika = TimeUtils.nanoTime();   // käytetään tässä jampan loppujuoksuun
+                taustatEsiinAika = TimeUtils.nanoTime();   // käytetään tässä jampan loppujuoksuun
                 leikkuri.setX(jamppa.getX());   // leikkuri jamppan käteen
                 leikkuri.setY(jamppa.getY());
             }
@@ -224,52 +224,60 @@ public class PeliRuutu implements Screen {
                 if (TimeUtils.nanoTime() - esteEsiinAika > 250000000) {
                     esteEsiin(1);
                     esteEsiinAika = TimeUtils.nanoTime();
-                }
-                // taustan kuvat
-                if (TimeUtils.nanoTime() - taustatEsiinAika > TimeUtils.millisToNanos(600)) {
-                    taustatEsiin();
-                    taustatEsiinAika = TimeUtils.nanoTime();
-                }
+               }
+
             } else switch (lopunAlku) { // kentän loppuminen, talliin ajo ym.
                 case 0:
-                    taustatEsiinAika = TimeUtils.nanoTime();
+                    esteEsiinAika = TimeUtils.nanoTime();
                     lopunAlku = 1;
                     break;
                 case 1:
-                    if (TimeUtils.nanoTime() - taustatEsiinAika > TimeUtils.millisToNanos(2000)) {
+                    if (TimeUtils.nanoTime() - esteEsiinAika > TimeUtils.millisToNanos(2000)) {
                         esteEsiin(18);  // tyyppi 18 = talli
                         lopunAlku = 2;
-                        taustatEsiinAika = TimeUtils.nanoTime();
+                        esteEsiinAika = TimeUtils.nanoTime();
                     }
                     break;
                 case 2:     // viivästys tallin esiintulon jälkeen
-                    if (TimeUtils.nanoTime() - taustatEsiinAika > TimeUtils.millisToNanos(2000)) {
+                    if (TimeUtils.nanoTime() - esteEsiinAika > TimeUtils.millisToNanos(2000)) {
                         lopunAlku = 3;
-                        taustatEsiinAika = TimeUtils.nanoTime();
+                        esteEsiinAika = TimeUtils.nanoTime();
                     }
                     break;
-                    // Case 3 tulee myös overlaps(talli):in kautta
+                    // Case 3 tulee myös overlaps(talli):in kautta, mutta varulta muutenkin (jos ajaa tallin ohi?)
                 case 3:
-                    if (TimeUtils.nanoTime() - taustatEsiinAika > TimeUtils.millisToNanos(1000))
-                       lopunAlku = 4;
+                    if (TimeUtils.nanoTime() - esteEsiinAika > TimeUtils.millisToNanos(1000)){
+                        lopunAlku = 4;
+                        esteEsiinAika = TimeUtils.nanoTime();
+
+                    }
                     break;
                 case 4:
                     // TODO väliRuutu();
                     leikkuri.leikkuriCrash("talli");   // viedään osuman tyyppi leikkuriluokkaan
-                  //  esteVauhti = 0;
-                  //  maisemaVauhti = 0;
-                    leikkuri.setX(-300);
+                    leikkuri.setX(-300);                      // leikkuri jää talliin, jamppa säntää juoksuun
+                   if (TimeUtils.nanoTime() - esteEsiinAika > TimeUtils.millisToNanos(2000)){
+                        lopunAlku = 5;
+                    }
+                    break;
+                case 5:
+                    game.setScreen(new ValiRuutu(game));
                     break;
             }
 
+Log.d("CASE    CASE    C>"," "+lopunAlku + " " +esteEsiinAika);
 
-
+        // taustan kuvat
+        if (TimeUtils.nanoTime() - taustatEsiinAika > TimeUtils.millisToNanos(600)) {
+            taustatEsiin();
+            taustatEsiinAika = TimeUtils.nanoTime();
+        }
         // maiseman kuvat
-            if (TimeUtils.nanoTime() - maisemaEsiinAika > taustaIntervalli) {
-                maisemaEsiin();
-                maisemaEsiinAika = TimeUtils.nanoTime();
-                taustaIntervalli = TimeUtils.millisToNanos(MathUtils.random(1000, 3000)); // kuinka usein uusi pilvi tms tulee esiin
-            }
+        if (TimeUtils.nanoTime() - maisemaEsiinAika > taustaIntervalli) {
+            maisemaEsiin();
+            maisemaEsiinAika = TimeUtils.nanoTime();
+            taustaIntervalli = TimeUtils.millisToNanos(MathUtils.random(1000, 3000)); // kuinka usein uusi pilvi tms tulee esiin
+        }
 
 
             // LIIKUTA esteitä, poista esteet ruudun ulkopuolella / osuneet
@@ -331,8 +339,10 @@ public class PeliRuutu implements Screen {
                             if (lopunAlku == 2) {   // seuraava kohta lopunAlku-switchissä, kun osutaan talliin
                                 lopunAlku = 3;
                                 kerätytKolikot += 1;
-                                taustatEsiinAika = TimeUtils.nanoTime();
+                                esteEsiinAika = TimeUtils.nanoTime();
                                 hitSound.play();
+                                Log.d("    C>  talliosumassa", " "+lopunAlku + " " +esteEsiinAika);
+
                             }
                     }
                 }

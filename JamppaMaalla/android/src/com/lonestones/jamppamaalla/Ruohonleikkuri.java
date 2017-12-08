@@ -54,7 +54,7 @@ public class Ruohonleikkuri {
 
     public Ruohonleikkuri() {
         leikkuriRect = new Rectangle(); // Leikkurin rect, jonka törmäyksiä esteisiin tarkkaillaan
-        setTaso(3);     // Ladataan leikkurin freimit, samaa funktiota käytetään kun myöhemmin päivitetään leikkurin malli
+        setTaso(0);     // Ladataan leikkurin freimit, samaa funktiota käytetään kun myöhemmin päivitetään leikkurin malli
         setX(100);
         setY(20);
         stateTime = 0f; // Instantiate a SpriteBatch for drawing and reset the elapsed animation time to 0

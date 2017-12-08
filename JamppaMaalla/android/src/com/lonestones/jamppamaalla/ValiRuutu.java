@@ -12,17 +12,40 @@ import com.badlogic.gdx.graphics.Texture;
 
 public class ValiRuutu implements Screen{
 
+    final JamppaMaalla game;
     OrthographicCamera camera;
     Texture alkuruutu;
 
     public ValiRuutu(final JamppaMaalla peli) {
+        game = peli;
 
+        // alkukuva ruutuun
+        alkuruutu = new Texture(Gdx.files.internal("alkuruutu_valmis.png"));
+        camera = new OrthographicCamera();
+        camera.setToOrtho(false, 800, 480);
     }
 
 
     @Override
     public void render(float delta) {
+        Gdx.gl.glClearColor(0, 150, 0.2f, 1);
+        Gdx.gl.glClear(GL20.GL_COLOR_BUFFER_BIT);
 
+        camera.update();
+        game.batch.setProjectionMatrix(camera.combined);
+
+        game.batch.begin();
+        game.batch.draw(alkuruutu,0,0,800,480);
+        game.font.draw(game.batch, "Täpsäytä ruutua aloittaaksesi ", 240, 30,300f,1,false);
+        game.batch.end();
+
+        // otetaan "back" -nappula normikäyttöön (peliruudussa napataan sen toiminto)
+        Gdx.input.setCatchBackKey(false);
+
+        if (Gdx.input.isTouched()) {
+            game.setScreen(new PeliRuutu(game, this));
+            dispose();
+        }
 
     }
 
