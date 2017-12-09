@@ -3,9 +3,13 @@ package com.lonestones.jamppamaalla;
 
 import com.badlogic.gdx.Game;
 import com.badlogic.gdx.Gdx;
+
+import com.badlogic.gdx.Preferences;
 import com.badlogic.gdx.graphics.g2d.BitmapFont;
 import com.badlogic.gdx.graphics.g2d.SpriteBatch;
 import com.badlogic.gdx.scenes.scene2d.ui.Skin;
+
+
 
 /**
  * Created by Vesada on 29.11.2017.
@@ -19,33 +23,25 @@ public class JamppaMaalla extends Game {
     SpriteBatch batch;
     BitmapFont font;
     BitmapFont isofont;
-    public static Skin gameSkin;    // ladattiin napeille ym "skin"
-
-
-    //TODO tallettujat
-    // enkka
-    // kolikot
-    // taskurahat
-    // leikkausprosentti
+    public static Skin gameSkin;                                // ladataan napeille ym "skin"
 
 
     public void create() {
         // SpriteBatch is a special class that is used to draw 2D images
         batch = new SpriteBatch();
 
-        // Uusi fontti, säädä koko
+        // Fontit, säädetään koko
         font = new BitmapFont();
         font.getData().setScale(2,2);
         isofont = new BitmapFont();
         isofont.getData().setScale(4,4);
 
+        // otetaan käyttöön "skin" buttoneita ja labeleita varten
         gameSkin = new Skin(Gdx.files.internal("jampskin/jampskin.json"));
-
 
         // uusi mainmenu ruutu
         this.setScreen(new MainMenuRuutu(this));
 
-       // this.setScreen(new TitleScreen(this));
     }
 
     public void render() {

@@ -1,9 +1,5 @@
 package com.lonestones.jamppamaalla;
 
-/**
- * Created by Vesada on 9.12.2017.
- **/
-
 import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.Input;
 import com.badlogic.gdx.Screen;
@@ -11,23 +7,6 @@ import com.badlogic.gdx.graphics.GL20;
 import com.badlogic.gdx.graphics.OrthographicCamera;
 import com.badlogic.gdx.graphics.Texture;
 import com.badlogic.gdx.scenes.scene2d.Actor;
-import com.badlogic.gdx.scenes.scene2d.InputEvent;
-import com.badlogic.gdx.scenes.scene2d.InputListener;
-import com.badlogic.gdx.scenes.scene2d.Stage;
-import com.badlogic.gdx.scenes.scene2d.actions.MoveToAction;
-import com.badlogic.gdx.scenes.scene2d.ui.Image;
-import com.badlogic.gdx.scenes.scene2d.ui.ImageTextButton;
-import com.badlogic.gdx.scenes.scene2d.ui.Label;
-import com.badlogic.gdx.utils.Align;
-import com.badlogic.gdx.utils.Array;
-import com.badlogic.gdx.utils.viewport.ScreenViewport;package com.lonestones.jamppamaalla;
-
-import com.badlogic.gdx.Gdx;
-import com.badlogic.gdx.Input;
-import com.badlogic.gdx.Screen;
-import com.badlogic.gdx.graphics.GL20;
-import com.badlogic.gdx.graphics.OrthographicCamera;
-import com.badlogic.gdx.graphics.Texture;
 import com.badlogic.gdx.scenes.scene2d.InputEvent;
 import com.badlogic.gdx.scenes.scene2d.InputListener;
 import com.badlogic.gdx.scenes.scene2d.Stage;
@@ -38,12 +17,12 @@ import com.badlogic.gdx.scenes.scene2d.ui.Label;
 import com.badlogic.gdx.utils.Align;
 import com.badlogic.gdx.utils.Array;
 import com.badlogic.gdx.utils.viewport.ScreenViewport;
-import com.badlogic.gdx.scenes.scene2d.Actor;
-import java.util.Iterator;
+
 
 /**
- * Created by Vesada on 7.12.2017.
+ * Created by Vesada on 9.12.2017.
  */
+
 
 public class KauppaRuutu implements Screen {
     private final JamppaMaalla game;
@@ -60,9 +39,9 @@ public class KauppaRuutu implements Screen {
 
         kaupparuutu = new Texture(Gdx.files.internal("ruutu.png"));
 
-        int palkka = 200;
+
         // lisätään "gameSkin":istä tyyli, jolla tekstit ja napit tehdään ruutuun
-        Label title = new Label(""+palkka, JamppaMaalla.gameSkin,"default");
+        Label title = new Label("Mitäpä sais olla?", JamppaMaalla.gameSkin,"default");
         title.setAlignment(Align.left);
         title.setX((Gdx.graphics.getWidth()*17/40));
         title.setY((Gdx.graphics.getHeight()*19/36));
@@ -112,22 +91,6 @@ public class KauppaRuutu implements Screen {
         stage.addActor(playButton); // lisätään "näyttämölle" "näyttelijä"
 
 
-        Array<Actor> kolikot = stage.getActors();
-
-        // kerätyt kolikot ruutuun TODO
-        int len = 2;
-        for (int i = 0; i < len; i++) {
-            kolikko = new Image(new Texture(Gdx.files.internal("kolikko.png")));
-            kolikot.add(kolikko);
-            kolikko.setX(1600f);
-            kolikko.setY(960f);
-
-            MoveToAction action = new MoveToAction();
-            action.setPosition((Gdx.graphics.getWidth() * 5 / 7) + (i*(Gdx.graphics.getWidth()/5))/len, Gdx.graphics.getHeight() * 2 / 3); // kolikot asettuu riviin, enemmän kolikoita -> pienemmät välit -> mahtuu ruutuun
-            action.setDuration(2f);
-            kolikko.addAction(action);
-            stage.addActor(kolikko);
-        }
 
         // otetaan "back" -nappula normikäyttöön (peliruudussa napataan sen toiminto)
         Gdx.input.setCatchBackKey(true);   // ulos pelistä back-napilla
@@ -141,7 +104,7 @@ public class KauppaRuutu implements Screen {
         stage.act();    // updates all of the Actions connected to an Actor
 
         stage.getBatch().begin();
-        stage.getBatch().draw(alkuruutu, 0, 0, Gdx.graphics.getWidth(),Gdx.graphics.getHeight());
+        stage.getBatch().draw(kaupparuutu, 0, 0, Gdx.graphics.getWidth(),Gdx.graphics.getHeight());
 
         stage.getBatch().end();
         stage.draw();
@@ -150,7 +113,7 @@ public class KauppaRuutu implements Screen {
             // back-napilla takaisin main menuun
             //  jamppaMusic.stop();
 
-            game.setScreen(new MainMenuRuutu(game));    // kummin TODO
+            game.setScreen(new MainMenuRuutu(game));
         }
     }
 

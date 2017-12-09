@@ -1,15 +1,14 @@
 package com.lonestones.jamppamaalla;
 
+import android.util.Log;
+
 import com.badlogic.gdx.Gdx;
-import com.badlogic.gdx.Input;
+import com.badlogic.gdx.Preferences;
 import com.badlogic.gdx.Screen;
 import com.badlogic.gdx.graphics.GL20;
 import com.badlogic.gdx.graphics.OrthographicCamera;
 import com.badlogic.gdx.graphics.Texture;
-import com.badlogic.gdx.graphics.g2d.TextureRegion;
 import com.badlogic.gdx.scenes.scene2d.ui.Label;
-import com.badlogic.gdx.scenes.scene2d.utils.TextureRegionDrawable;
-import com.badlogic.gdx.utils.Align;
 
 
 /**
@@ -24,10 +23,20 @@ public class MainMenuRuutu implements Screen {
     private Texture alkuruutu;
     private Label title;
 
+    Preferences pref;
+
+    // TODO äänet pois/päälle
 
     public MainMenuRuutu(final JamppaMaalla peli) {
         game = peli;
 
+        pref =  Gdx.app.getPreferences("JamppaMaallaPrefs");
+
+        haePrefs();
+
+
+        // TODO reset prefs, kun peli loppuu
+        Log.d("kerätyt kolikot väliruu", "kolikot mainmenu "+     pref.getInteger("kolikot"));
         // alkukuva ruutuun
         alkuruutu = new Texture(Gdx.files.internal("alkuruutu_valmis.png"));
         camera = new OrthographicCamera();
@@ -57,6 +66,22 @@ public class MainMenuRuutu implements Screen {
         }
 
     }
+
+
+    protected void haePrefs() {
+       //     if(prefs==null) {
+      //
+        pref.putInteger("enkka", 0);
+        pref.putInteger("kolikot", 0);
+        pref.putInteger("taskurahat", 0);
+        pref.putFloat("leikkaustarkkuus", 0);
+        pref.putInteger("leikkuri", 0);
+        pref.putBoolean("soundOn", true);
+        //    }
+        pref.flush();
+
+    }
+
 
     @Override
     public void resize(int width, int height) {

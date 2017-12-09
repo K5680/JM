@@ -5,10 +5,13 @@ package com.lonestones.jamppamaalla;
  */
 
 
+import android.content.Context;
 import android.util.Log;
+import android.widget.Toast;
 
 import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.Input.Keys;
+import com.badlogic.gdx.Preferences;
 import com.badlogic.gdx.Screen;
 import com.badlogic.gdx.audio.Music;
 import com.badlogic.gdx.audio.Sound;
@@ -23,12 +26,14 @@ import com.badlogic.gdx.scenes.scene2d.Stage;
 import com.badlogic.gdx.utils.Array;
 import com.badlogic.gdx.utils.TimeUtils;
 
+import java.io.FileOutputStream;
 import java.util.Iterator;
+
+import static android.provider.Telephony.Mms.Part.FILENAME;
 
 // Screens contain methods from ApplicationListener objects + new methods like show and hide (lose focus).
 public class PeliRuutu implements Screen {
     private JamppaMaalla game;          // "final" defines an entity that can only be assigned once
- //   private final Screen parent;         // MainMenuRuutu, jotta siihen voidaan palata, TODO parempi systeemi?
 
     private Texture taivaskuva;
 
@@ -70,17 +75,23 @@ public class PeliRuutu implements Screen {
     private int lopunAlku;  // kentän vaihtuminen
     private double kentassaNurmikoita = 5;     // TODO 100
 
+    Preferences pref;
 
 
-    public PeliRuutu(final JamppaMaalla peli) { //, Screen parent) {
-    //    this.parent = parent;   // TODO, parempi systeemi?
+
+    public PeliRuutu(final JamppaMaalla peli) {
         this.game = peli;
+
 
        // Jamppa kehiin
         jamppa = new Jamppa();
         leikkuri = new Ruohonleikkuri();
         leikkuri.setX(jamppa.getX());   // leikkuri jamppan käteen
         leikkuri.setY(jamppa.getY());
+
+        pref =  Gdx.app.getPreferences("JamppaMaallaPrefs"); // haetaan prefsseistä tallennetut arvot
+        haePrefs(); // haetaan preferenceistä talletetut tiedot (rahat, leikkuri ym.)
+
 
         // partikkeliefektit
         pe = new ParticleEffect();
@@ -138,11 +149,9 @@ public class PeliRuutu implements Screen {
            Texture tarkistusnelio = new Texture(pixmap);
         */
 
-
         if (nurmeaLeikattu > 0) prosentti =  100*(nurmeaLeikattu/nurmiPotentiaali); // lasketaan paljonko nurmea leikattu prosentuaalisesti
         double round = Math.pow(10,1);
         prosentti = Math.round(prosentti*round)/round;
-
 
 
         // aloita "batch", piirrä "Jamppa" ja esteet ym                    // BATCH BEGIN
@@ -247,7 +256,6 @@ public class PeliRuutu implements Screen {
                     }
                     break;
                 case 4:
-                    // TODO väliRuutu();
                     leikkuri.leikkuriCrash("talli");   // viedään osuman tyyppi leikkuriluokkaan
                     leikkuri.setX(-300);                      // leikkuri jää talliin, jamppa säntää juoksuun
                    if (TimeUtils.nanoTime() - esteEsiinAika > TimeUtils.millisToNanos(2000)){
@@ -256,11 +264,12 @@ public class PeliRuutu implements Screen {
                     break;
                 case 5:
                     jamppaMusic.stop();
+
+                    talletaTiedot();    // talleta muuttujat = rahat, leikkurin malli ym
+
                     game.setScreen(new ValiRuutu(game));
                     break;
             }
-
-Log.d("CASE    CASE    C>"," "+lopunAlku + " " +esteEsiinAika);
 
         // taustan kuvat
         if (TimeUtils.nanoTime() - taustatEsiinAika > TimeUtils.millisToNanos(600)) {
@@ -369,12 +378,42 @@ Log.d("CASE    CASE    C>"," "+lopunAlku + " " +esteEsiinAika);
         // back-napilla takaisin main menuun
         jamppaMusic.stop();
 
-        game.setScreen(new MainMenuRuutu(game));    // kummin TODO
+        game.setScreen(new MainMenuRuutu(game));
                     //game.setScreen(parent);
 
         //dispose(); // peliruutu poistoon
     }
 }
+
+    public void talletaTiedot() {
+        pref.putInteger("enkka", 0); // TODO
+        pref.putInteger("kolikot", 10);//kerätytKolikot);
+        pref.putInteger("taskurahat", 0);
+        double prosentti = (nurmiPotentiaali / kentassaNurmikoita);
+        float f = (float) prosentti;
+        pref.putFloat("leikkaustarkkuus", f);
+        pref.putInteger("leikkuri", 1);
+        pref.putBoolean("soundOn", true);
+        pref.flush();
+
+    }
+
+
+    public void haePrefs() {
+        if(pref==null){
+            pref.putInteger("enkka", 0);
+            pref.putInteger("kolikot", 0);
+            pref.putInteger("taskurahat", 0);
+            pref.putFloat("leikkaustarkkuus", 0);
+            pref.putInteger("leikkuri", 0);
+            pref.putBoolean("soundOn", true);
+        } else {
+            kerätytKolikot = pref.getInteger("kolikot");
+            leikkuri.setTaso(pref.getInteger("leikkuri"));
+            pref.flush();
+        }
+    }
+
 
 
     // tuodaan esteet ruutuun

@@ -1,7 +1,10 @@
 package com.lonestones.jamppamaalla;
 
+import android.util.Log;
+
 import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.Input;
+import com.badlogic.gdx.Preferences;
 import com.badlogic.gdx.Screen;
 import com.badlogic.gdx.graphics.GL20;
 import com.badlogic.gdx.graphics.OrthographicCamera;
@@ -28,15 +31,20 @@ public class ValiRuutu implements Screen{
     private OrthographicCamera camera;
     private Texture alkuruutu;
     private Stage stage;
-    private Image kolikko;
+    private int keratytKolikot;
 
+    Preferences pref;
 
     public ValiRuutu(final JamppaMaalla peli) {
         game = peli;
-
         stage = new Stage(new ScreenViewport());    // ruudun "näyttämö"
-
         alkuruutu = new Texture(Gdx.files.internal("valiruutu.png"));
+
+        pref =  Gdx.app.getPreferences("JamppaMaallaPrefs");
+
+        keratytKolikot = pref.getInteger("kolikot");
+        Log.d("kerätyt kolikot väliruu", "ValiRuutu: "+keratytKolikot);
+
 
         int palkka = 200;
         // lisätään "gameSkin":istä tyyli, jolla tekstit ja napit tehdään ruutuun
@@ -64,7 +72,8 @@ public class ValiRuutu implements Screen{
         kauppaButton.addListener(new InputListener(){
             @Override
             public void touchUp (InputEvent event, float x, float y, int pointer, int button) {
-               // game.setScreen(new PeliRuutu(game));
+               game.setScreen(new KauppaRuutu(game));
+               dispose();
             }
             @Override
             public boolean touchDown (InputEvent event, float x, float y, int pointer, int button) {
@@ -81,6 +90,7 @@ public class ValiRuutu implements Screen{
             @Override
             public void touchUp (InputEvent event, float x, float y, int pointer, int button) {
                 game.setScreen(new PeliRuutu(game));
+                dispose();
             }
             @Override
             public boolean touchDown (InputEvent event, float x, float y, int pointer, int button) {
@@ -89,19 +99,18 @@ public class ValiRuutu implements Screen{
         });
         stage.addActor(playButton); // lisätään "näyttämölle" "näyttelijä"
 
-
         Array<Actor> kolikot = stage.getActors();
 
-        // kerätyt kolikot ruutuun TODO
-        int len = 2;
-        for (int i = 0; i < len; i++) {
-            kolikko = new Image(new Texture(Gdx.files.internal("kolikko.png")));
+        // kerätyt kolikot ruutuun
+
+        for (int i = 0; i < keratytKolikot; i++) {
+            Image kolikko = new Image(new Texture(Gdx.files.internal("kolikko.png")));
             kolikot.add(kolikko);
             kolikko.setX(1600f);
             kolikko.setY(960f);
 
             MoveToAction action = new MoveToAction();
-            action.setPosition((Gdx.graphics.getWidth() * 5 / 7) + (i*(Gdx.graphics.getWidth()/5))/len, Gdx.graphics.getHeight() * 2 / 3); // kolikot asettuu riviin, enemmän kolikoita -> pienemmät välit -> mahtuu ruutuun
+            action.setPosition((Gdx.graphics.getWidth() * 5 / 7) + (i*(Gdx.graphics.getWidth()/5))/keratytKolikot, Gdx.graphics.getHeight() * 2 / 3); // kolikot asettuu riviin, enemmän kolikoita -> pienemmät välit -> mahtuu ruutuun
             action.setDuration(2f);
             kolikko.addAction(action);
             stage.addActor(kolikko);
@@ -128,9 +137,12 @@ public class ValiRuutu implements Screen{
             // back-napilla takaisin main menuun
             //  jamppaMusic.stop();
 
-            game.setScreen(new MainMenuRuutu(game));    // kummin TODO
+            game.setScreen(new MainMenuRuutu(game));
         }
     }
+
+
+
 
 
     @Override
