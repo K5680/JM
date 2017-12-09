@@ -1,0 +1,47 @@
+
+esteet.png
+format: RGBA8888
+filter: Nearest,Nearest
+repeat: none
+kolikko
+  rotate: false
+  xy: 1, 1
+  size: 81, 58
+  orig: 81, 58
+  offset: 0, 0
+  index: -1
+latakko
+  rotate: false
+  xy: 84, 6
+  size: 74, 53
+  orig: 74, 53
+  offset: 0, 0
+  index: -1
+kivi
+  rotate: false
+  xy: 160, 19
+  size: 63, 40
+  orig: 63, 40
+  offset: 0, 0
+  index: -1
+ruoho
+  rotate: false
+  xy: 225, 33
+  size: 32, 26
+  orig: 32, 26
+  offset: 0, 0
+  index: -1
+ruoho2
+  rotate: false
+  xy: 259, 33
+  size: 32, 26
+  orig: 32, 26
+  offset: 0, 0
+  index: -1
+ruoho_leikattu
+  rotate: false
+  xy: 293, 33
+  size: 32, 26
+  orig: 32, 26
+  offset: 0, 0
+  index: -1

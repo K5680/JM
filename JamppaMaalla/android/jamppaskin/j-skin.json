@@ -85,8 +85,8 @@ com.badlogic.gdx.scenes.scene2d.ui.Skin$TintedDrawable: {
 }
 com.badlogic.gdx.scenes.scene2d.ui.Button$ButtonStyle: {
 	default: {
-		up: nappi1
-		down: nappi1_painettu
+		up: nappi2
+		down: nappi2_painettu
 	}
 }
 com.badlogic.gdx.scenes.scene2d.ui.CheckBox$CheckBoxStyle: {
@@ -109,16 +109,15 @@ com.badlogic.gdx.scenes.scene2d.ui.ImageButton$ImageButtonStyle: {
 }
 com.badlogic.gdx.scenes.scene2d.ui.ImageTextButton$ImageTextButtonStyle: {
 	default: {
-		font: font
+		font: title
 		up: nappi1
 		down: nappi1_painettu
 	}
 }
 com.badlogic.gdx.scenes.scene2d.ui.Label$LabelStyle: {
 	default: {
-		font: font
-		fontColor: black
-		background: nappi1
+		font: title
+		fontColor: white
 	}
 	menuitem-shortcut: {
 		font: font

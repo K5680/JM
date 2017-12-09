@@ -18,7 +18,15 @@ public class JamppaMaalla extends Game {
     public static final float Puuraja = 300;
     SpriteBatch batch;
     BitmapFont font;
+    BitmapFont isofont;
     public static Skin gameSkin;    // ladattiin napeille ym "skin"
+
+
+    //TODO tallettujat
+    // enkka
+    // kolikot
+    // taskurahat
+    // leikkausprosentti
 
 
     public void create() {
@@ -28,9 +36,11 @@ public class JamppaMaalla extends Game {
         // Uusi fontti, säädä koko
         font = new BitmapFont();
         font.getData().setScale(2,2);
+        isofont = new BitmapFont();
+        isofont.getData().setScale(4,4);
 
+        gameSkin = new Skin(Gdx.files.internal("jampskin/jampskin.json"));
 
-      gameSkin = new Skin(Gdx.files.internal("omaskin.json"));
 
         // uusi mainmenu ruutu
         this.setScreen(new MainMenuRuutu(this));

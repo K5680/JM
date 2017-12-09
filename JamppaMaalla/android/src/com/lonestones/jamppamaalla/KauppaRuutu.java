@@ -1,5 +1,27 @@
 package com.lonestones.jamppamaalla;
 
+/**
+ * Created by Vesada on 9.12.2017.
+ **/
+
+import com.badlogic.gdx.Gdx;
+import com.badlogic.gdx.Input;
+import com.badlogic.gdx.Screen;
+import com.badlogic.gdx.graphics.GL20;
+import com.badlogic.gdx.graphics.OrthographicCamera;
+import com.badlogic.gdx.graphics.Texture;
+import com.badlogic.gdx.scenes.scene2d.Actor;
+import com.badlogic.gdx.scenes.scene2d.InputEvent;
+import com.badlogic.gdx.scenes.scene2d.InputListener;
+import com.badlogic.gdx.scenes.scene2d.Stage;
+import com.badlogic.gdx.scenes.scene2d.actions.MoveToAction;
+import com.badlogic.gdx.scenes.scene2d.ui.Image;
+import com.badlogic.gdx.scenes.scene2d.ui.ImageTextButton;
+import com.badlogic.gdx.scenes.scene2d.ui.Label;
+import com.badlogic.gdx.utils.Align;
+import com.badlogic.gdx.utils.Array;
+import com.badlogic.gdx.utils.viewport.ScreenViewport;package com.lonestones.jamppamaalla;
+
 import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.Input;
 import com.badlogic.gdx.Screen;
@@ -23,20 +45,20 @@ import java.util.Iterator;
  * Created by Vesada on 7.12.2017.
  */
 
-public class ValiRuutu implements Screen{
+public class KauppaRuutu implements Screen {
     private final JamppaMaalla game;
     private OrthographicCamera camera;
-    private Texture alkuruutu;
+    private Texture kaupparuutu;
     private Stage stage;
     private Image kolikko;
 
 
-    public ValiRuutu(final JamppaMaalla peli) {
+    public KauppaRuutu(final JamppaMaalla peli) {
         game = peli;
 
         stage = new Stage(new ScreenViewport());    // ruudun "näyttämö"
 
-        alkuruutu = new Texture(Gdx.files.internal("valiruutu.png"));
+        kaupparuutu = new Texture(Gdx.files.internal("ruutu.png"));
 
         int palkka = 200;
         // lisätään "gameSkin":istä tyyli, jolla tekstit ja napit tehdään ruutuun
@@ -64,7 +86,7 @@ public class ValiRuutu implements Screen{
         kauppaButton.addListener(new InputListener(){
             @Override
             public void touchUp (InputEvent event, float x, float y, int pointer, int button) {
-               // game.setScreen(new PeliRuutu(game));
+                // game.setScreen(new PeliRuutu(game));
             }
             @Override
             public boolean touchDown (InputEvent event, float x, float y, int pointer, int button) {
@@ -119,9 +141,9 @@ public class ValiRuutu implements Screen{
         stage.act();    // updates all of the Actions connected to an Actor
 
         stage.getBatch().begin();
-            stage.getBatch().draw(alkuruutu, 0, 0, Gdx.graphics.getWidth(),Gdx.graphics.getHeight());
+        stage.getBatch().draw(alkuruutu, 0, 0, Gdx.graphics.getWidth(),Gdx.graphics.getHeight());
 
-            stage.getBatch().end();
+        stage.getBatch().end();
         stage.draw();
 
         if (Gdx.input.isKeyPressed(Input.Keys.BACK)){

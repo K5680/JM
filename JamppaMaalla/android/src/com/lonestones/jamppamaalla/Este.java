@@ -3,9 +3,16 @@ package com.lonestones.jamppamaalla;
 import android.util.Log;
 
 import com.badlogic.gdx.Gdx;
+import com.badlogic.gdx.graphics.Pixmap;
 import com.badlogic.gdx.graphics.Texture;
+import com.badlogic.gdx.graphics.TextureData;
+import com.badlogic.gdx.graphics.g2d.Sprite;
+import com.badlogic.gdx.graphics.g2d.TextureAtlas;
+import com.badlogic.gdx.graphics.g2d.TextureRegion;
 import com.badlogic.gdx.math.MathUtils;
 import com.badlogic.gdx.math.Rectangle;
+import com.badlogic.gdx.scenes.scene2d.Actor;
+import com.badlogic.gdx.scenes.scene2d.ui.Image;
 
 /**
  * Created by Omistaja on 29.11.2017.
@@ -31,12 +38,11 @@ public class Este {
         // aseta x ja y (puuraja = yläreuna)
         y = MathUtils.random(0, JamppaMaalla.Puuraja-100);
         x = 800;
-        xMin = -100;
+        xMin = -300;
 
-
-        // lataa estekuva, arpomalla tyyppi
-        if (tyyp == 18)
-            esteTyyppi = 18;
+        // lataa estekuvat, arpomalla tyyppi
+        if (tyyp != 0)
+            esteTyyppi = tyyp;
         else
             esteTyyppi = MathUtils.random(0,17);
 
@@ -71,7 +77,20 @@ public class Este {
                 tyyppi = "kivi";
                 break;
             case 17:
-                esteKuva = new Texture(Gdx.files.internal("kolikko.png"));
+                esteKuva = new Texture(Gdx.files.internal("kolikko.png"));      // kolikot liian isoja ruutuun, skaalataan reaaliajassa (testi)
+
+                Pixmap pixmap200 = new Pixmap(Gdx.files.internal("kolikko.png"));
+                Pixmap pixmap100 = new Pixmap(pixmap200.getWidth()/2, pixmap200.getHeight()/2, pixmap200.getFormat());
+
+                pixmap100.drawPixmap(pixmap200,
+                        0, 0, pixmap200.getWidth(), pixmap200.getHeight(),
+                        0, 0, pixmap100.getWidth(), pixmap100.getHeight()
+                );
+                esteKuva = new Texture(pixmap100);
+
+                pixmap200.dispose();
+                pixmap100.dispose();
+
                 tyyppi = "kolikko";
                 break;
             case 18:
@@ -88,7 +107,6 @@ public class Este {
 
         // tähän ehkä parempi systeemi? taulukko? samasta kuvasta framet?
         ruohoLeikattu = new Texture(Gdx.files.internal("ruoho_leikattu.png"));
-
 
         // tee esteen rectangle saman kokoiseksi kuin kuva
         esteRect = new Rectangle();
@@ -121,7 +139,6 @@ public class Este {
 
     public void setY(float yi) {
         // pysy rajoissa
-        // ...
         y = yi;
         esteRect.y = yi;
     }

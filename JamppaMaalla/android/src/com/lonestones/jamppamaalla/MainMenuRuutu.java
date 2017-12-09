@@ -6,6 +6,10 @@ import com.badlogic.gdx.Screen;
 import com.badlogic.gdx.graphics.GL20;
 import com.badlogic.gdx.graphics.OrthographicCamera;
 import com.badlogic.gdx.graphics.Texture;
+import com.badlogic.gdx.graphics.g2d.TextureRegion;
+import com.badlogic.gdx.scenes.scene2d.ui.Label;
+import com.badlogic.gdx.scenes.scene2d.utils.TextureRegionDrawable;
+import com.badlogic.gdx.utils.Align;
 
 
 /**
@@ -15,10 +19,10 @@ import com.badlogic.gdx.graphics.Texture;
 // Screens contain methods from ApplicationListener objects + new methods like show and hide (lose focus).
 public class MainMenuRuutu implements Screen {
 
-    final JamppaMaalla game;
-    OrthographicCamera camera;
-    Texture alkuruutu;
-
+    private final JamppaMaalla game;
+    private OrthographicCamera camera;
+    private Texture alkuruutu;
+    private Label title;
 
 
     public MainMenuRuutu(final JamppaMaalla peli) {
@@ -27,7 +31,7 @@ public class MainMenuRuutu implements Screen {
         // alkukuva ruutuun
         alkuruutu = new Texture(Gdx.files.internal("alkuruutu_valmis.png"));
         camera = new OrthographicCamera();
-        camera.setToOrtho(false, 800, 480);
+        camera.setToOrtho(false, 1600, 960);
     }
 
 
@@ -40,15 +44,15 @@ public class MainMenuRuutu implements Screen {
         game.batch.setProjectionMatrix(camera.combined);
 
         game.batch.begin();
-            game.batch.draw(alkuruutu,0,0,800,480);
-            game.font.draw(game.batch, "Täpsäytä ruutua aloittaaksesi ", 240, 30,300f,1,false);
+            game.batch.draw(alkuruutu,0,0,1600,960);
+            game.isofont.draw(game.batch, "Täpsäytä ruutua aloittaaksesi ", Gdx.graphics.getWidth()/2, Gdx.graphics.getHeight()/6,300f,0,false);
         game.batch.end();
 
         // otetaan "back" -nappula normikäyttöön (peliruudussa napataan sen toiminto)
         Gdx.input.setCatchBackKey(false);
 
         if (Gdx.input.isTouched()) {
-            game.setScreen(new PeliRuutu(game, this));
+            game.setScreen(new PeliRuutu(game));
             dispose();
         }
 

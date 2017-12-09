@@ -31,7 +31,6 @@ public class Jamppa {
     private static final int FRAME_COLS = 3, FRAME_ROWS = 2;
     private Animation<TextureRegion> walkAnimation; // frame type = textureregion
     Texture jampanJuoksu;
-    TextureRegion jamppaKuva;
 
 
     public Jamppa() {

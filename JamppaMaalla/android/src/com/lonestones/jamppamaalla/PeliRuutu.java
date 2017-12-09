@@ -27,8 +27,8 @@ import java.util.Iterator;
 
 // Screens contain methods from ApplicationListener objects + new methods like show and hide (lose focus).
 public class PeliRuutu implements Screen {
-    private final JamppaMaalla game;     // "final" defines an entity that can only be assigned once
-    private final Screen parent;         // MainMenuRuutu, jotta siihen voidaan palata
+    private JamppaMaalla game;          // "final" defines an entity that can only be assigned once
+ //   private final Screen parent;         // MainMenuRuutu, jotta siihen voidaan palata, TODO parempi systeemi?
 
     private Texture taivaskuva;
 
@@ -68,21 +68,15 @@ public class PeliRuutu implements Screen {
     private double prosentti;
     private double nurmiPotentiaali;
     private int lopunAlku;  // kentän vaihtuminen
-    private double kentassaNurmikoita = 100;
+    private double kentassaNurmikoita = 5;     // TODO 100
 
 
 
-    public PeliRuutu(final JamppaMaalla peli, Screen parent) {
-        this.parent = parent;
+    public PeliRuutu(final JamppaMaalla peli) { //, Screen parent) {
+    //    this.parent = parent;   // TODO, parempi systeemi?
         this.game = peli;
-       // stage = new Stage(new ScreenViewport()); // onko oltava?
 
-        // TODO: kaupparuutu
-        // TODO: kentät
-        // TODO: pelin loppuminen
-        // TODO: ennätys
-
-        // Jamppa kehiin
+       // Jamppa kehiin
         jamppa = new Jamppa();
         leikkuri = new Ruohonleikkuri();
         leikkuri.setX(jamppa.getX());   // leikkuri jamppan käteen
@@ -106,7 +100,7 @@ public class PeliRuutu implements Screen {
 
         // create the camera and the SpriteBatch
         kamera = new OrthographicCamera();
-        kamera.setToOrtho(false, 800, 480);
+        kamera.setToOrtho(false, 800, 480);     // ruudun koko "unitteina"
 
         taivaskuva = new Texture(Gdx.files.internal("taivas2.png"));         // taivas ruudun yläreunaan
 
@@ -261,6 +255,7 @@ public class PeliRuutu implements Screen {
                     }
                     break;
                 case 5:
+                    jamppaMusic.stop();
                     game.setScreen(new ValiRuutu(game));
                     break;
             }
