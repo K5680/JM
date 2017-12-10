@@ -1,6 +1,5 @@
 package com.lonestones.jamppamaalla;
 
-import android.util.Log;
 
 import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.Preferences;
@@ -15,28 +14,22 @@ import com.badlogic.gdx.scenes.scene2d.ui.Label;
  * Created by Vesada on 29.11.2017.
  * */
 
-// Screens contain methods from ApplicationListener objects + new methods like show and hide (lose focus).
-public class MainMenuRuutu implements Screen {
+
+public class MainMenuRuutu implements Screen {  // Screens contain methods from ApplicationListener objects + new methods like show and hide (lose focus).
 
     private final JamppaMaalla game;
     private OrthographicCamera camera;
     private Texture alkuruutu;
-    private Label title;
-
-    Preferences pref;
+    private Preferences pref;   // Sovelluskohtaiset tallennettavat tiedot
 
     // TODO äänet pois/päälle
 
+
     public MainMenuRuutu(final JamppaMaalla peli) {
         game = peli;
+        pref =  Gdx.app.getPreferences("JamppaMaallaPrefs");   // pref:in nimi
+        haePrefs();                                                   // haetaan tiedot
 
-        pref =  Gdx.app.getPreferences("JamppaMaallaPrefs");
-
-        haePrefs();
-
-
-        // TODO reset prefs, kun peli loppuu
-        Log.d("kerätyt kolikot väliruu", "kolikot mainmenu "+     pref.getInteger("kolikot"));
         // alkukuva ruutuun
         alkuruutu = new Texture(Gdx.files.internal("alkuruutu_valmis.png"));
         camera = new OrthographicCamera();
@@ -57,30 +50,29 @@ public class MainMenuRuutu implements Screen {
             game.isofont.draw(game.batch, "Täpsäytä ruutua aloittaaksesi ", Gdx.graphics.getWidth()/2, Gdx.graphics.getHeight()/6,300f,0,false);
         game.batch.end();
 
-        // otetaan "back" -nappula normikäyttöön (peliruudussa napataan sen toiminto)
-        Gdx.input.setCatchBackKey(false);
+
+        Gdx.input.setCatchBackKey(false);           // otetaan "back" -nappula normikäyttöön (peliruudussa napataan sen toiminto)
 
         if (Gdx.input.isTouched()) {
-            game.setScreen(new PeliRuutu(game));
+            game.setScreen(new PeliRuutu(game));    // ruutua painettaessa käynnistetään peli
             dispose();
         }
 
     }
 
 
-    protected void haePrefs() {
-       //     if(prefs==null) {
-      //
-        pref.putInteger("enkka", 0);
+    private void haePrefs() {
+        if (pref == null) {
+            pref.putInteger("enkka", 0);
+            pref.putBoolean("soundOn", true);
+        }
+        // Nollataan arvot pelin alkuun
         pref.putInteger("kolikot", 0);
         pref.putInteger("taskurahat", 0);
         pref.putFloat("leikkaustarkkuus", 0);
         pref.putInteger("leikkuri", 0);
-        pref.putBoolean("soundOn", true);
-        //    }
         pref.flush();
-
-    }
+ }
 
 
     @Override
@@ -105,5 +97,7 @@ public class MainMenuRuutu implements Screen {
 
     @Override
     public void dispose() {
+        alkuruutu.dispose();
+        // Huom, Game.dispose() kutsutaan automaattisesti
     }
 }

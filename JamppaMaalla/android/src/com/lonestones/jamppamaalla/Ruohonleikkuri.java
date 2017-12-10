@@ -86,6 +86,10 @@ public class Ruohonleikkuri {
         osumaTyyppi = osuma;
     }
 
+    public int getTaso() {
+        return taso;
+    }
+
     public void setTaso(int leikkurinTyyppi) {
         taso = leikkurinTyyppi;
 

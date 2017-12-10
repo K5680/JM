@@ -73,9 +73,9 @@ public class PeliRuutu implements Screen {
     private double prosentti;
     private double nurmiPotentiaali;
     private int lopunAlku;  // kentän vaihtuminen
-    private double kentassaNurmikoita = 5;     // TODO 100
+    private double kentassaNurmikoita = 20;     // TODO 100
 
-    Preferences pref;
+    private Preferences pref;
 
 
 
@@ -158,7 +158,7 @@ public class PeliRuutu implements Screen {
         game.batch.begin();
             piirraObjektit(); // objektit ruutuun
             // tekstit ruutuun
-            game.font.draw(game.batch, "Törmäilyt: " + tormaysMaara + "  Leikkaustarkkuus:  " + prosentti + " ->" + nurmiPotentiaali + "/" + kentassaNurmikoita+  "  Kolikot: " + kerätytKolikot, 0, 480);
+            game.font.draw(game.batch, "Törmäilyt: " + tormaysMaara + "  Leikkaustarkkuus:  " + prosentti + "  Kolikot: " + kerätytKolikot, 0, 480);
 
         /*  // väliaikainen testineliö törmäyksille
             Gdx.app.log("tag","msg");
@@ -225,7 +225,7 @@ public class PeliRuutu implements Screen {
             if (nurmiPotentiaali < kentassaNurmikoita) {    // lisätään esteitä kunnes "pelto" loppuu
                 // tehdään uusi este jos aikaa kulunut tarpeeksi
                 if (TimeUtils.nanoTime() - esteEsiinAika > 250000000) {
-                    esteEsiin(1);
+                    esteEsiin(0);
                     esteEsiinAika = TimeUtils.nanoTime();
                }
 
@@ -385,18 +385,14 @@ public class PeliRuutu implements Screen {
     }
 }
 
-    public void talletaTiedot() {
-        pref.putInteger("enkka", 0); // TODO
-        pref.putInteger("kolikot", 10);//kerätytKolikot);
-        pref.putInteger("taskurahat", 0);
-        double prosentti = (nurmiPotentiaali / kentassaNurmikoita);
-        float f = (float) prosentti;
-        pref.putFloat("leikkaustarkkuus", f);
-        pref.putInteger("leikkuri", 1);
-        pref.putBoolean("soundOn", true);
-        pref.flush();
 
+    public void talletaTiedot() {
+        pref.putInteger("kolikot", kerätytKolikot);
+        pref.putFloat("leikkaustarkkuus", (float)prosentti);
+        pref.putInteger("leikkuri", leikkuri.getTaso());    // tämä kauppaan
+        pref.flush();
     }
+
 
 
     public void haePrefs() {
@@ -407,10 +403,10 @@ public class PeliRuutu implements Screen {
             pref.putFloat("leikkaustarkkuus", 0);
             pref.putInteger("leikkuri", 0);
             pref.putBoolean("soundOn", true);
+            pref.flush();
         } else {
             kerätytKolikot = pref.getInteger("kolikot");
             leikkuri.setTaso(pref.getInteger("leikkuri"));
-            pref.flush();
         }
     }
 
