@@ -138,7 +138,7 @@ public class PeliRuutu implements Screen {
         // arguments to glClearColor are the red, green
         // blue and alpha component in the range [0,1]
         // of the color to be used to clear the screen.
-        Gdx.gl.glClearColor(0, 30f, 0, 1);
+        Gdx.gl.glClearColor((0/255.0f), (255/255.0f), (0/255.0f), 1);
         Gdx.gl.glClear(GL20.GL_COLOR_BUFFER_BIT);
 
         kamera.update(); // tell the camera to update its matrices

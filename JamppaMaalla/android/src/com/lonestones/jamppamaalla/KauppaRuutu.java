@@ -6,6 +6,7 @@ import com.badlogic.gdx.Screen;
 import com.badlogic.gdx.graphics.GL20;
 import com.badlogic.gdx.graphics.OrthographicCamera;
 import com.badlogic.gdx.graphics.Texture;
+import com.badlogic.gdx.math.MathUtils;
 import com.badlogic.gdx.scenes.scene2d.Actor;
 import com.badlogic.gdx.scenes.scene2d.InputEvent;
 import com.badlogic.gdx.scenes.scene2d.InputListener;
@@ -16,6 +17,7 @@ import com.badlogic.gdx.scenes.scene2d.ui.ImageTextButton;
 import com.badlogic.gdx.scenes.scene2d.ui.Label;
 import com.badlogic.gdx.utils.Align;
 import com.badlogic.gdx.utils.Array;
+import com.badlogic.gdx.utils.TimeUtils;
 import com.badlogic.gdx.utils.viewport.ScreenViewport;
 
 
@@ -29,15 +31,22 @@ public class KauppaRuutu implements Screen {
     private OrthographicCamera camera;
     private Texture kaupparuutu;
     private Stage stage;
+    private Stage menoStage;
     private Image kolikko;
+    private int vaihe = 0;
+
+
+    private long ajastin;   // TODO testiä
 
 
     public KauppaRuutu(final JamppaMaalla peli) {
         game = peli;
 
         stage = new Stage(new ScreenViewport());    // ruudun "näyttämö"
+        menoStage = new Stage(new ScreenViewport());    // ruudun "näyttämö"
 
-        kaupparuutu = new Texture(Gdx.files.internal("ruutu.png"));
+
+        kaupparuutu = new Texture(Gdx.files.internal("kaupparuutu.png"));
 
 
         // lisätään "gameSkin":istä tyyli, jolla tekstit ja napit tehdään ruutuun
@@ -94,6 +103,11 @@ public class KauppaRuutu implements Screen {
 
         // otetaan "back" -nappula normikäyttöön (peliruudussa napataan sen toiminto)
         Gdx.input.setCatchBackKey(true);   // ulos pelistä back-napilla
+
+
+
+        ajastin = TimeUtils.nanoTime();
+
     }
 
 
@@ -101,14 +115,29 @@ public class KauppaRuutu implements Screen {
     public void render(float delta) {
         Gdx.gl.glClearColor(1, 1, 1, 1);
         Gdx.gl.glClear(GL20.GL_COLOR_BUFFER_BIT);
-        stage.act();    // updates all of the Actions connected to an Actor
 
-        stage.getBatch().begin();
-        stage.getBatch().draw(kaupparuutu, 0, 0, Gdx.graphics.getWidth(),Gdx.graphics.getHeight());
 
-        stage.getBatch().end();
-        stage.draw();
+        if ((TimeUtils.nanoTime() > ajastin + TimeUtils.millisToNanos(3000))) vaihe = 1;
 
+if (vaihe == 1) {
+    stage.act();    // updates all of the Actions connected to an Actor
+
+    stage.getBatch().begin();
+
+    stage.getBatch().draw(kaupparuutu, 0, 0, Gdx.graphics.getWidth(), Gdx.graphics.getHeight());
+
+    stage.getBatch().end();
+    stage.draw();
+} else {
+    menoStage.act();    // updates all of the Actions connected to an Actor
+
+    menoStage.getBatch().begin();
+
+    menoStage.getBatch().draw(kaupparuutu, 0, 0, Gdx.graphics.getWidth(), Gdx.graphics.getHeight());
+
+    menoStage.getBatch().end();
+    menoStage.draw();
+}
         if (Gdx.input.isKeyPressed(Input.Keys.BACK)){
             // back-napilla takaisin main menuun
             //  jamppaMusic.stop();
