@@ -77,20 +77,7 @@ public class Este {
                 tyyppi = "kivi";
                 break;
             case 17:
-                esteKuva = new Texture(Gdx.files.internal("kolikko.png"));      // kolikot liian isoja ruutuun, skaalataan reaaliajassa (testi)
-
-                Pixmap pixmap200 = new Pixmap(Gdx.files.internal("kolikko.png"));
-                Pixmap pixmap100 = new Pixmap(pixmap200.getWidth()/2, pixmap200.getHeight()/2, pixmap200.getFormat());
-
-                pixmap100.drawPixmap(pixmap200,
-                        0, 0, pixmap200.getWidth(), pixmap200.getHeight(),
-                        0, 0, pixmap100.getWidth(), pixmap100.getHeight()
-                );
-                esteKuva = new Texture(pixmap100);
-
-                pixmap200.dispose();
-                pixmap100.dispose();
-
+                esteKuva = new Texture(Gdx.files.internal("kolikko.png"));
                 tyyppi = "kolikko";
                 break;
             case 18:

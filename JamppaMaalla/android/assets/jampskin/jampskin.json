@@ -291,6 +291,13 @@ com.badlogic.gdx.scenes.scene2d.ui.ImageTextButton$ImageTextButtonStyle: {
 		downFontColor: text-selected
 		checkedFontColor: text-selected
 	}
+	small: {
+		font: milkshake2
+		fontColor: black
+		up: nappi1
+		down: nappi1_painettu
+		over: nappi1_painettu
+	}
 }
 com.badlogic.gdx.scenes.scene2d.ui.Label$LabelStyle: {
 	default: {

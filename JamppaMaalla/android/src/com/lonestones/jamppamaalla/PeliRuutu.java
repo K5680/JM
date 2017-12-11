@@ -39,7 +39,11 @@ public class PeliRuutu implements Screen {
 
     private OrthographicCamera kamera;
     private Sound hitSound;
+    private Sound kolikkoSound;
+    private Sound latakkoSound;
     private Music jamppaMusic;
+    private boolean latakkoSoundPlaying;
+    private long latakkoSoundPlayingAjastin;
 
     private Array<Este> esteet;
     private Array<Tausta> taustat;
@@ -73,7 +77,7 @@ public class PeliRuutu implements Screen {
     private double prosentti;
     private double nurmiPotentiaali;
     private int lopunAlku;  // kentän vaihtuminen
-    private double kentassaNurmikoita = 20;     // TODO 100
+    private double kentassaNurmikoita = 4;     // TODO 100
 
     private Preferences pref;
 
@@ -84,7 +88,7 @@ public class PeliRuutu implements Screen {
 
 
        // Jamppa kehiin
-        jamppa = new Jamppa();
+        jamppa = new Jamppa(0);
         leikkuri = new Ruohonleikkuri();
         leikkuri.setX(jamppa.getX());   // leikkuri jamppan käteen
         leikkuri.setY(jamppa.getY());
@@ -105,8 +109,10 @@ public class PeliRuutu implements Screen {
         Gdx.input.setCatchBackKey(true);
 
         // lataa äänet ja musiikki
-        hitSound = Gdx.audio.newSound(Gdx.files.internal("244983__ani-music__ani-big-pipe-hit.wav"));
-        jamppaMusic = Gdx.audio.newMusic(Gdx.files.internal("old_folks_by_vesada.mp3"));
+        hitSound = Gdx.audio.newSound(Gdx.files.internal("sounds/244983__ani-music__ani-big-pipe-hit.wav"));
+        jamppaMusic = Gdx.audio.newMusic(Gdx.files.internal("sounds/old_folks_by_vesada.mp3"));
+        kolikkoSound = Gdx.audio.newSound(Gdx.files.internal("sounds/363090__fractalstudios__coins-being-dropped-assorted.mp3"));
+        latakkoSound = Gdx.audio.newSound(Gdx.files.internal("sounds/390005__morganveilleux__water-splash-small.mp3"));
         jamppaMusic.setLooping(true);
 
         // create the camera and the SpriteBatch
@@ -171,7 +177,12 @@ public class PeliRuutu implements Screen {
         game.batch.end();                                                   // BATCH END
 
 
-
+        // äänien nollaus
+        if (latakkoSoundPlaying) {
+            if (TimeUtils.nanoTime() > TimeUtils.nanoTime() + latakkoSoundPlayingAjastin){
+                latakkoSoundPlaying = false;
+            }
+        }
 
 
         // Jamppa osuu esteeseen, pysäytetään ruudunvieritys, mitä tapahtuu jampalle?
@@ -221,55 +232,7 @@ public class PeliRuutu implements Screen {
         }
 
 
-            // ------------>   ESTEIDEN HALLINTA  >-----------------------------------------------
-            if (nurmiPotentiaali < kentassaNurmikoita) {    // lisätään esteitä kunnes "pelto" loppuu
-                // tehdään uusi este jos aikaa kulunut tarpeeksi
-                if (TimeUtils.nanoTime() - esteEsiinAika > 250000000) {
-                    esteEsiin(0);
-                    esteEsiinAika = TimeUtils.nanoTime();
-               }
-
-            } else switch (lopunAlku) { // kentän loppuminen, talliin ajo ym.
-                case 0:
-                    esteEsiinAika = TimeUtils.nanoTime();
-                    lopunAlku = 1;
-                    break;
-                case 1:
-                    if (TimeUtils.nanoTime() - esteEsiinAika > TimeUtils.millisToNanos(2000)) {
-                        esteEsiin(18);  // tyyppi 18 = talli
-                        lopunAlku = 2;
-                        esteEsiinAika = TimeUtils.nanoTime();
-                    }
-                    break;
-                case 2:     // viivästys tallin esiintulon jälkeen
-                    if (TimeUtils.nanoTime() - esteEsiinAika > TimeUtils.millisToNanos(2000)) {
-                        lopunAlku = 3;
-                        esteEsiinAika = TimeUtils.nanoTime();
-                    }
-                    break;
-                    // Case 3 tulee myös overlaps(talli):in kautta, mutta varulta muutenkin (jos ajaa tallin ohi?)
-                case 3:
-                    if (TimeUtils.nanoTime() - esteEsiinAika > TimeUtils.millisToNanos(1000)){
-                        lopunAlku = 4;
-                        esteEsiinAika = TimeUtils.nanoTime();
-
-                    }
-                    break;
-                case 4:
-                    leikkuri.leikkuriCrash("talli");   // viedään osuman tyyppi leikkuriluokkaan
-                    leikkuri.setX(-300);                      // leikkuri jää talliin, jamppa säntää juoksuun
-                   if (TimeUtils.nanoTime() - esteEsiinAika > TimeUtils.millisToNanos(2000)){
-                        lopunAlku = 5;
-                    }
-                    break;
-                case 5:
-                    jamppaMusic.stop();
-
-                    talletaTiedot();    // talleta muuttujat = rahat, leikkurin malli ym
-
-                    game.setScreen(new ValiRuutu(game));
-                    break;
-            }
+        esteidenHallinta();
 
         // taustan kuvat
         if (TimeUtils.nanoTime() - taustatEsiinAika > TimeUtils.millisToNanos(600)) {
@@ -308,8 +271,7 @@ public class PeliRuutu implements Screen {
 
                         }  else if (este.getTyyppi() == "kolikko"){
                             iter.remove();
-                            // TODO kolikko sound
-                            // pointseja
+                            kolikkoSound.play();
                             kerätytKolikot += 1;
                         }
                     }
@@ -317,9 +279,7 @@ public class PeliRuutu implements Screen {
                 // ----------------------------------------------------------------------------------
                 // ---------------------------------------------------------------------------------- LEIKKURI OSUU JOHONKIN
                 if (este.getEsteRect().overlaps(leikkuri.getleikkuriRect())) {
-
                     if (!leikkuri.leikkuriTormaa) {
-
                         if (este.getTyyppi() == "kivi") {   // tutkitaan mihin on osuttu
                             leikkuri.leikkuriCrash(este.getTyyppi());   // viedään osuman tyyppi leikkuriluokkaan
                             esteVauhti = 0;
@@ -327,27 +287,29 @@ public class PeliRuutu implements Screen {
                             iter.remove();
                             tormaysMaara++;
                             hitSound.play();
-
-                        }  else if (este.getTyyppi() == "ruoho"){   // jos osutaan nurmeen, lisätään leikattujen laskuriin kerran
+                        } else if (este.getTyyppi() == "ruoho") {   // jos osutaan nurmeen, lisätään leikattujen laskuriin kerran
                             if (!este.getLeikattu()) {
                                 nurmeaLeikattu += 1;
                                 este.setLeikattu(true);
                             }
-
-                        }  else if (este.getTyyppi() == "kolikko"){
-
-                        } else if (este.getTyyppi() == "latakko")
+                        } else if (este.getTyyppi() == "latakko") {
                             leikkuri.leikkuriCrash(este.getTyyppi());
+                            if (!latakkoSoundPlaying) {
+                                latakkoSound.play();
+                                latakkoSoundPlaying = true;
+                                latakkoSoundPlayingAjastin = TimeUtils.nanoTime();
+                            }
                         } else if (este.getTyyppi() == "talli") {
                             // TODO talli sound
                             if (lopunAlku == 2) {   // seuraava kohta lopunAlku-switchissä, kun osutaan talliin
                                 lopunAlku = 3;
-                                kerätytKolikot += 1;
+
                                 esteEsiinAika = TimeUtils.nanoTime();
                                 hitSound.play();
-                                Log.d("    C>  talliosumassa", " "+lopunAlku + " " +esteEsiinAika);
+                                Log.d("    C>  talliosumassa", " " + lopunAlku + " " + esteEsiinAika);
 
                             }
+                        }
                     }
                 }
                 // ----------------------------------------------------------------------------------
@@ -384,6 +346,58 @@ public class PeliRuutu implements Screen {
         //dispose(); // peliruutu poistoon
     }
 }
+
+
+// ------------>   ESTEIDEN HALLINTA  >-----------------------------------------------
+public void esteidenHallinta() {
+    if (nurmiPotentiaali < kentassaNurmikoita) {    // lisätään esteitä kunnes "pelto" loppuu
+        // tehdään uusi este jos aikaa kulunut tarpeeksi
+        if (TimeUtils.nanoTime() - esteEsiinAika > 250000000) {
+            esteEsiin(0);
+            esteEsiinAika = TimeUtils.nanoTime();
+        }
+
+    } else switch (lopunAlku) { // kentän loppuminen, talliin ajo ym.
+        case 0:
+            esteEsiinAika = TimeUtils.nanoTime();
+            lopunAlku = 1;
+            break;
+        case 1:
+            if (TimeUtils.nanoTime() - esteEsiinAika > TimeUtils.millisToNanos(2000)) {
+                esteEsiin(18);  // tyyppi 18 = talli
+                lopunAlku = 2;
+                esteEsiinAika = TimeUtils.nanoTime();
+            }
+            break;
+        case 2:     // viivästys tallin esiintulon jälkeen
+            if (TimeUtils.nanoTime() - esteEsiinAika > TimeUtils.millisToNanos(2000)) {
+                lopunAlku = 3;
+                esteEsiinAika = TimeUtils.nanoTime();
+            }
+            break;
+        // Case 3 tulee myös overlaps(talli):in kautta, mutta varulta muutenkin (jos ajaa tallin ohi?)
+        case 3:
+            if (TimeUtils.nanoTime() - esteEsiinAika > TimeUtils.millisToNanos(1000)){
+                lopunAlku = 4;
+                esteEsiinAika = TimeUtils.nanoTime();
+
+            }
+            break;
+        case 4:
+            leikkuri.leikkuriCrash("talli");   // viedään osuman tyyppi leikkuriluokkaan
+            leikkuri.setX(-300);                      // leikkuri jää talliin, jamppa säntää juoksuun
+            if (TimeUtils.nanoTime() - esteEsiinAika > TimeUtils.millisToNanos(2000)){
+                lopunAlku = 5;
+            }
+            break;
+        case 5:
+            jamppaMusic.stop();
+            talletaTiedot();    // talleta muuttujat = rahat, leikkurin malli ym
+            game.setScreen(new ValiRuutu(game));
+            break;
+    }
+}
+
 
 
     public void talletaTiedot() {
@@ -454,17 +468,20 @@ public class PeliRuutu implements Screen {
             game.batch.draw(tausta.getEsteKuva(), tausta.getX(), tausta.getY());
         }
 
-        if (lopunAlku > 1)  {   // kentän lopussa talli piirretään jampan päälle, muut esteet alle
+        if (lopunAlku > 0)  {   // kentän lopussa talli piirretään jampan päälle, muut esteet alle
             game.batch.draw(jamppa.getJamppaKuva(), jamppa.getX(), jamppa.getY());              // piirrä Jamppa-freimi
             game.batch.draw(leikkuri.getLeikkuriKuva(),  leikkuri.getX(), leikkuri.getY());     // piirrä ruohonleikkuri
         }
 
         // piirrä esteet
         for (Este este : esteet) {
-            game.batch.draw(este.getEsteKuva(), este.getX(), este.getY());
+            if (este.tyyppi == "kolikko") { // // kolikot liian isoja ruutuun, skaalataan reaaliajassa
+                game.batch.draw(este.getEsteKuva(), este.getX(), este.getY(), este.getEsteKuva().getWidth()/2, este.getEsteKuva().getHeight()/2);
+            } else {
+                game.batch.draw(este.getEsteKuva(), este.getX(), este.getY());
+            }
         }
-
-        if (lopunAlku < 2) {
+        if (lopunAlku < 1) {
             game.batch.draw(jamppa.getJamppaKuva(), jamppa.getX(), jamppa.getY());              // piirrä Jamppa-freimi
             game.batch.draw(leikkuri.getLeikkuriKuva(),  leikkuri.getX(), leikkuri.getY());     // piirrä ruohonleikkuri
         }

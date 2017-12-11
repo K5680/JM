@@ -150,6 +150,16 @@ public class Ruohonleikkuri {
         return leikkuriKuva;
     }
 
+    public TextureRegion getLeikkuriKuvaKaanto() {  // käänteinen leikkuri
+        stateTime += Gdx.graphics.getDeltaTime(); // Accumulate elapsed animation time
+        TextureRegion leikkuriKuva = walkAnimation.getKeyFrame(stateTime, true);
+
+        if (!leikkuriKuva.isFlipX())    // flipataan freimi toisinpäin
+            leikkuriKuva.flip(true, false);
+
+        return leikkuriKuva;
+    }
+
     public float getX() {
         return x;
     }

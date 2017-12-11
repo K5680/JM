@@ -4,6 +4,7 @@ import android.util.Log;
 
 import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.Preferences;
+import com.badlogic.gdx.graphics.Pixmap;
 import com.badlogic.gdx.graphics.Texture;
 import com.badlogic.gdx.graphics.g2d.Animation;
 import com.badlogic.gdx.graphics.g2d.TextureRegion;
@@ -37,8 +38,8 @@ public class Jamppa {
 
     // TODO Jampan rypäsy
 
-    public Jamppa() {
-        lataaFreimit();
+    public Jamppa(int skaalaus) {
+        lataaFreimit(skaalaus);     // skaalataanko jamppakuvaa ja minkä verran, menosuunta
 
         jamppaRect = new Rectangle();               // rect, jonka törmäyksiä esteisiin tarkkaillaan
         x =  100;
@@ -53,9 +54,11 @@ public class Jamppa {
         stateTime = 0f; // Instantiate a SpriteBatch for drawing and reset the elapsed animation time to 0
     }
 
+
     public Rectangle getJamppaRect() {
         return jamppaRect;
     }
+
 
     public void setX(float xi) {
 
@@ -97,32 +100,73 @@ public class Jamppa {
         return y;
     }
 
+    public void setXmax(float xmax) {   // pitää olla muutettavissa, jotta jamppa voi liikkua muuallakin kuin peliruudussa
+        xMax = xmax;
+    }
+
+    public void setXmin(float xmin){  // pitää olla muutettavissa, jotta jamppa voi liikkua muuallakin kuin peliruudussa
+        xMin = xmin;
+    }
+
+
     public TextureRegion getJamppaKuva() {
         stateTime += Gdx.graphics.getDeltaTime(); // Accumulate elapsed animation time
         TextureRegion jamppaKuva = walkAnimation.getKeyFrame(stateTime, true);
+
         return jamppaKuva;
-
     }
 
-public void lataaFreimit() {
-    // lataa jampan kuva, "leikataan" kuvasta framet
-    jampanJuoksu = new Texture(Gdx.files.internal("jamppa_anim.png"));
+    public TextureRegion getJamppaKuvaKaanto() {    // käänteinen jamppa, flipataan freimit
+        stateTime += Gdx.graphics.getDeltaTime(); // Accumulate elapsed animation time
+        TextureRegion jamppaKuva = walkAnimation.getKeyFrame(stateTime, true);
 
-    TextureRegion[][] tmp = TextureRegion.split(jampanJuoksu,
-            jampanJuoksu.getWidth() / FRAME_COLS,
-            jampanJuoksu.getHeight() / FRAME_ROWS);
+        if (!jamppaKuva.isFlipX())
+            jamppaKuva.flip(true, false);
 
-    TextureRegion[] walkFrames = new TextureRegion[FRAME_COLS * FRAME_ROWS];
-    int index = 0;
-    for (int i = 0; i < FRAME_ROWS; i++) {
-        for (int j = 0; j < FRAME_COLS; j++) {
-            walkFrames[index++] = tmp[i][j];
+        return jamppaKuva;
+    }
+
+    public void lataaFreimit(int skaalaus) {
+        // lataa jampan kuva, "leikataan" kuvasta framet
+        jampanJuoksu = new Texture(Gdx.files.internal("jamppa_anim.png"));
+
+        if (skaalaus > 0) jampanJuoksu = skaalaaJamppaKuva(skaalaus);   // skaalataan tarvittaessa jamppaa
+
+        TextureRegion[][] tmp = TextureRegion.split(jampanJuoksu,
+                jampanJuoksu.getWidth() / FRAME_COLS,
+                jampanJuoksu.getHeight() / FRAME_ROWS);
+
+        TextureRegion[] walkFrames = new TextureRegion[FRAME_COLS * FRAME_ROWS];
+        int index = 0;
+        for (int i = 0; i < FRAME_ROWS; i++) {
+            for (int j = 0; j < FRAME_COLS; j++) {
+                walkFrames[index++] = tmp[i][j];
+            }
         }
+
+        walkAnimation = new Animation<TextureRegion>(0.1f, walkFrames);
+        TextureRegion jamppaKuva = walkAnimation.getKeyFrame(stateTime, true);
     }
 
-    walkAnimation = new Animation<TextureRegion>(0.1f, walkFrames);
-    TextureRegion jamppaKuva = walkAnimation.getKeyFrame(stateTime, true);
 
-}
+    public Texture skaalaaJamppaKuva(int skaalaus) {    // skaalataan kuva suuremmaksi, koska resoluutio on eri kaupparuudussa
+        int kerroin = skaalaus;
 
+        if (!jampanJuoksu.getTextureData().isPrepared()) {
+            jampanJuoksu.getTextureData().prepare();
+        }
+        Pixmap pixmap200 = jampanJuoksu.getTextureData().consumePixmap();
+        Pixmap pixmap100 = new Pixmap(pixmap200.getWidth() * kerroin, pixmap200.getHeight() * kerroin, pixmap200.getFormat());
+
+        pixmap100.drawPixmap(pixmap200,
+                0, 0, pixmap200.getWidth(), pixmap200.getHeight(),
+                0, 0, pixmap100.getWidth(), pixmap100.getHeight()
+        );
+        Texture skaalattuJamppa = new Texture(pixmap100);
+
+        pixmap200.dispose();
+        pixmap100.dispose();
+
+        return skaalattuJamppa;
+    }
 }

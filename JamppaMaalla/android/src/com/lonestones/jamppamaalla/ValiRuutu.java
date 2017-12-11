@@ -146,14 +146,11 @@ public class ValiRuutu implements Screen{
     private void haePrefs() {
             keratytKolikot = pref.getInteger("kolikot");
             palkka = (int)(pref.getFloat("leikkaustarkkuus")*3);
-            taskurahat = (pref.getInteger("taskurahat"))+palkka + keratytKolikot*100;
-
-        Log.d("rahat", "haePrefs: ------------------------------------->>>>>>>> "+ pref.getFloat("leikkaustarkkuus") + "    " +palkka);
+            taskurahat = (pref.getInteger("taskurahat"))+ palkka + keratytKolikot*100;
 
             pref.putInteger("taskurahat", taskurahat);
-
+            pref.putInteger("kolikot", 0);
             pref.putInteger("enkka", taskurahat); // TODO enkan tallennus
-
             pref.flush();
     }
 
