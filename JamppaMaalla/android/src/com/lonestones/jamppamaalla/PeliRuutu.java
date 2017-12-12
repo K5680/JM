@@ -22,7 +22,7 @@ import com.badlogic.gdx.graphics.Texture;
 import com.badlogic.gdx.graphics.g2d.ParticleEffect;
 import com.badlogic.gdx.math.MathUtils;
 import com.badlogic.gdx.math.Vector3;
-import com.badlogic.gdx.scenes.scene2d.Stage;
+
 import com.badlogic.gdx.utils.Array;
 import com.badlogic.gdx.utils.TimeUtils;
 
@@ -63,13 +63,12 @@ public class PeliRuutu implements Screen {
     private long esteEsiinAika;
     private long taustatEsiinAika;
     private long maisemaEsiinAika;
-    private int tormaysMaara;
+    private int tormaysMaara = 3;   // montaka törmäystä sallitaan
     private Jamppa jamppa;
     private Ruohonleikkuri leikkuri;
 
-    private Stage stage; // onko oltava?
-    private ParticleEffect pe;  // savu- ym efektit
-    private ParticleEffect vesi;
+    private ParticleEffect pe;      // savuefekti
+    private ParticleEffect vesi;    // vesiefekti
 
     public static boolean peliAlkaaNyt = true; // eka käynnistys
     private double nurmeaLeikattu;
@@ -77,7 +76,7 @@ public class PeliRuutu implements Screen {
     private double prosentti;
     private double nurmiPotentiaali;
     private int lopunAlku;  // kentän vaihtuminen
-    private double kentassaNurmikoita = 4;     // TODO 100
+    private double kentassaNurmikoita = 4; //0;
 
     private Preferences pref;
 
@@ -164,7 +163,7 @@ public class PeliRuutu implements Screen {
         game.batch.begin();
             piirraObjektit(); // objektit ruutuun
             // tekstit ruutuun
-            game.font.draw(game.batch, "Törmäilyt: " + tormaysMaara + "  Leikkaustarkkuus:  " + prosentti + "  Kolikot: " + kerätytKolikot, 0, 480);
+            game.font.draw(game.batch, "Törmäilyt: " + (tormaysMaara-game.elamat) + " / " + tormaysMaara + "  Leikkaustarkkuus:  " + prosentti + "  Kolikot: " + kerätytKolikot, 0, 480);
 
         /*  // väliaikainen testineliö törmäyksille
             Gdx.app.log("tag","msg");
@@ -201,7 +200,10 @@ public class PeliRuutu implements Screen {
                 maisemaVauhti = perusVauhti-50;
                 pe.reset();     // savuefektin resetointi
                 vesi.reset();   // vesiefektin resetointi
-                //     if (pe.isComplete())   // tarpeen?
+
+                if (game.elamat < 1) {
+                        peliLoppu();
+                    }
                 }
 
         } else {
@@ -215,8 +217,6 @@ public class PeliRuutu implements Screen {
                     jamppa.setX(touchPos.x - 64 / 2); // jamppa vastaamaan kosketusnäytön ohjausta
                     jamppa.setY(touchPos.y - 64 / 2);
 
-                    leikkuri.setX(jamppa.getX());   // leikkuri jamppan käteen
-                    leikkuri.setY(jamppa.getY());
                 }
             } else if (lopunAlku < 4){    // Talliin automaattiohjaus
                 if (jamppa.getY() > 30) {
@@ -226,11 +226,18 @@ public class PeliRuutu implements Screen {
                 }
 
                 taustatEsiinAika = TimeUtils.nanoTime();   // käytetään tässä jampan loppujuoksuun
-                leikkuri.setX(jamppa.getX());   // leikkuri jamppan käteen
-                leikkuri.setY(jamppa.getY());
+        //        leikkuri.setX(jamppa.getX());   // leikkuri jamppan käteen
+        //        leikkuri.setY(jamppa.getY());
             }
         }
 
+        // leikkurin sijainti
+        if (lopunAlku < 3) {                 // ollaanko jo tallin liepeillä
+            leikkuri.setX(jamppa.getX());    // leikkuri jamppan käteen
+            leikkuri.setY(jamppa.getY());
+        } else {
+            leikkuri.setX(-300);             // jos talli, leikkuri jää talliin
+        }
 
         esteidenHallinta();
 
@@ -266,7 +273,7 @@ public class PeliRuutu implements Screen {
                             esteVauhti = 0;
                             maisemaVauhti = 0;
                             iter.remove();
-                            tormaysMaara++;
+                            game.elamat--;
                             hitSound.play();
 
                         }  else if (este.getTyyppi() == "kolikko"){
@@ -281,12 +288,14 @@ public class PeliRuutu implements Screen {
                 if (este.getEsteRect().overlaps(leikkuri.getleikkuriRect())) {
                     if (!leikkuri.leikkuriTormaa) {
                         if (este.getTyyppi() == "kivi") {   // tutkitaan mihin on osuttu
-                            leikkuri.leikkuriCrash(este.getTyyppi());   // viedään osuman tyyppi leikkuriluokkaan
-                            esteVauhti = 0;
-                            maisemaVauhti = 0;
-                            iter.remove();
-                            tormaysMaara++;
-                            hitSound.play();
+                            if (!jamppa.jamppaTormaa) {     // ei oteta osumaa sekä leikkurista että Jampasta
+                                leikkuri.leikkuriCrash(este.getTyyppi());   // viedään osuman tyyppi leikkuriluokkaan
+                                esteVauhti = 0;
+                                maisemaVauhti = 0;
+                                iter.remove();
+                                game.elamat--;
+                                hitSound.play();
+                            }
                         } else if (este.getTyyppi() == "ruoho") {   // jos osutaan nurmeen, lisätään leikattujen laskuriin kerran
                             if (!este.getLeikattu()) {
                                 nurmeaLeikattu += 1;
@@ -300,7 +309,7 @@ public class PeliRuutu implements Screen {
                                 latakkoSoundPlayingAjastin = TimeUtils.nanoTime();
                             }
                         } else if (este.getTyyppi() == "talli") {
-                            // TODO talli sound
+
                             if (lopunAlku == 2) {   // seuraava kohta lopunAlku-switchissä, kun osutaan talliin
                                 lopunAlku = 3;
 
@@ -338,12 +347,9 @@ public class PeliRuutu implements Screen {
 
     if (Gdx.input.isKeyPressed(Keys.BACK)){
         // back-napilla takaisin main menuun
-        jamppaMusic.stop();
-
+        if (game.musiikkiOn) jamppaMusic.stop();
         game.setScreen(new MainMenuRuutu(game));
-                    //game.setScreen(parent);
-
-        //dispose(); // peliruutu poistoon
+        dispose(); // peliruutu poistoon
     }
 }
 
@@ -370,7 +376,7 @@ public void esteidenHallinta() {
             }
             break;
         case 2:     // viivästys tallin esiintulon jälkeen
-            if (TimeUtils.nanoTime() - esteEsiinAika > TimeUtils.millisToNanos(2000)) {
+            if (TimeUtils.nanoTime() - esteEsiinAika > TimeUtils.millisToNanos(2500)) {
                 lopunAlku = 3;
                 esteEsiinAika = TimeUtils.nanoTime();
             }
@@ -380,20 +386,20 @@ public void esteidenHallinta() {
             if (TimeUtils.nanoTime() - esteEsiinAika > TimeUtils.millisToNanos(1000)){
                 lopunAlku = 4;
                 esteEsiinAika = TimeUtils.nanoTime();
-
             }
             break;
         case 4:
             leikkuri.leikkuriCrash("talli");   // viedään osuman tyyppi leikkuriluokkaan
-            leikkuri.setX(-300);                      // leikkuri jää talliin, jamppa säntää juoksuun
+                                                       // leikkuri jää talliin, jamppa säntää juoksuun
             if (TimeUtils.nanoTime() - esteEsiinAika > TimeUtils.millisToNanos(2000)){
                 lopunAlku = 5;
             }
             break;
         case 5:
-            jamppaMusic.stop();
+            if (game.musiikkiOn) jamppaMusic.stop();
             talletaTiedot();    // talleta muuttujat = rahat, leikkurin malli ym
             game.setScreen(new ValiRuutu(game));
+            dispose();
             break;
     }
 }
@@ -416,7 +422,6 @@ public void esteidenHallinta() {
             pref.putInteger("taskurahat", 0);
             pref.putFloat("leikkaustarkkuus", 0);
             pref.putInteger("leikkuri", 0);
-            pref.putBoolean("soundOn", true);
             pref.flush();
         } else {
             kerätytKolikot = pref.getInteger("kolikot");
@@ -468,7 +473,7 @@ public void esteidenHallinta() {
             game.batch.draw(tausta.getEsteKuva(), tausta.getX(), tausta.getY());
         }
 
-        if (lopunAlku > 0)  {   // kentän lopussa talli piirretään jampan päälle, muut esteet alle
+        if (lopunAlku > 2)  {   // kentän lopussa talli piirretään jampan päälle, muut esteet alle
             game.batch.draw(jamppa.getJamppaKuva(), jamppa.getX(), jamppa.getY());              // piirrä Jamppa-freimi
             game.batch.draw(leikkuri.getLeikkuriKuva(),  leikkuri.getX(), leikkuri.getY());     // piirrä ruohonleikkuri
         }
@@ -481,7 +486,7 @@ public void esteidenHallinta() {
                 game.batch.draw(este.getEsteKuva(), este.getX(), este.getY());
             }
         }
-        if (lopunAlku < 1) {
+        if (lopunAlku < 3) {
             game.batch.draw(jamppa.getJamppaKuva(), jamppa.getX(), jamppa.getY());              // piirrä Jamppa-freimi
             game.batch.draw(leikkuri.getLeikkuriKuva(),  leikkuri.getX(), leikkuri.getY());     // piirrä ruohonleikkuri
         }
@@ -502,6 +507,11 @@ public void esteidenHallinta() {
     }
 
 
+    public void peliLoppu() {
+        game.setScreen(new LoppuRuutu(game));
+        dispose(); // peliruutu poistoon
+    }
+
     @Override
     public void resize(int width, int height) {
     }
@@ -510,7 +520,7 @@ public void esteidenHallinta() {
     public void show() {
         // start the playback of the background music
         // when the screen is shown
-        jamppaMusic.play();
+        if (game.musiikkiOn) jamppaMusic.play();
     }
 
     @Override
@@ -527,10 +537,10 @@ public void esteidenHallinta() {
 
     @Override // SpriteBatches and Textures must always be disposed
     public void dispose() {
-        este.getEsteKuva().dispose();
         jamppa.jampanJuoksu.dispose();
         taivaskuva.dispose();
         hitSound.dispose();
+        kolikkoSound.dispose();
         jamppaMusic.dispose();
     }
 

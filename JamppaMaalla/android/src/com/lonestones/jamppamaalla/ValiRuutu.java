@@ -9,6 +9,7 @@ import com.badlogic.gdx.Screen;
 import com.badlogic.gdx.graphics.GL20;
 import com.badlogic.gdx.graphics.OrthographicCamera;
 import com.badlogic.gdx.graphics.Texture;
+import com.badlogic.gdx.graphics.g2d.GlyphLayout;
 import com.badlogic.gdx.scenes.scene2d.InputEvent;
 import com.badlogic.gdx.scenes.scene2d.InputListener;
 import com.badlogic.gdx.scenes.scene2d.Stage;
@@ -35,10 +36,10 @@ public class ValiRuutu implements Screen{
     private Preferences pref;
     private int palkka;
     private int taskurahat;
-
+    private Label title;
 
     public ValiRuutu(final JamppaMaalla peli) {
-        game = peli;
+        this.game = peli;
         stage = new Stage(new ScreenViewport());    // ruudun "näyttämö"
         alkuruutu = new Texture(Gdx.files.internal("valiruutu.png"));
 
@@ -46,35 +47,36 @@ public class ValiRuutu implements Screen{
         haePrefs();                                                 //
 
         // lisätään "gameSkin":istä tyyli, jolla tekstit ja napit tehdään ruutuun
-        Label title;
         if (keratytKolikot > 0) {   // jos on kerätty kolikoita, lisätään niiden summa ruutuun myös, muutoin pelkkä palkka
             title = new Label("" + palkka + " + " + keratytKolikot * 100, JamppaMaalla.gameSkin, "default");
         }else {
             title = new Label("" + palkka + " + " + keratytKolikot * 100, JamppaMaalla.gameSkin, "default");
         }
         title.setAlignment(Align.left);
-        title.setX((Gdx.graphics.getWidth()*17/40));
-        title.setY((Gdx.graphics.getHeight()*19/36));
-        title.setWidth(Gdx.graphics.getWidth());
+        title.setX((stage.getWidth()*17/40));
+        title.setY((stage.getHeight()*19/36));
+        title.setWidth(stage.getWidth());
         stage.addActor(title);  // lisätään "näyttämölle" "näyttelijä"
+
+        JamppaMaalla.gameSkin.getFont("milkshake2").getData().setScale(stage.getWidth()/1500);   // skaalataan fonttia hiukan ruutuun sopivaksi
 
         // lisätään "gameSkin":istä tyyli, jolla tekstit ja napit tehdään ruutuun
         Label rahat = new Label(""+taskurahat, JamppaMaalla.gameSkin,"default");
         rahat.setAlignment(Align.left);
-        rahat.setX((Gdx.graphics.getWidth()*19/40));
-        rahat.setY((Gdx.graphics.getHeight()*17/48));
-        rahat.setWidth(Gdx.graphics.getWidth());
+        rahat.setX((stage.getWidth()*19/40));
+        rahat.setY((stage.getHeight()*17/48));
+        rahat.setWidth(stage.getWidth());
         stage.addActor(rahat);  // lisätään "näyttämölle" "näyttelijä"
 
         // gameSkin napit
         ImageTextButton kauppaButton = new ImageTextButton("Kauppaan",JamppaMaalla.gameSkin);
-        kauppaButton.setWidth(Gdx.graphics.getWidth()/4);
-        kauppaButton.setHeight(Gdx.graphics.getHeight()/7);
-        kauppaButton.setPosition(Gdx.graphics.getWidth()/4-kauppaButton.getWidth()/3,Gdx.graphics.getHeight()/3-kauppaButton.getHeight());
+        kauppaButton.setWidth(stage.getWidth()/4);
+        kauppaButton.setHeight(stage.getHeight()/7);
+        kauppaButton.setPosition(stage.getWidth()/4-kauppaButton.getWidth()/3,stage.getHeight()/3-kauppaButton.getHeight());
         kauppaButton.addListener(new InputListener(){
             @Override
             public void touchUp (InputEvent event, float x, float y, int pointer, int button) {
-               game.setScreen(new KauppaRuutu(game));
+               game.setScreen(new KauppaRuutu(game));   // kauppaan
                dispose();
             }
             @Override
@@ -85,13 +87,13 @@ public class ValiRuutu implements Screen{
         stage.addActor(kauppaButton); // lisätään "näyttämölle" "näyttelijä"
         // gameSkin nappi
         ImageTextButton playButton = new ImageTextButton("Hommiin",JamppaMaalla.gameSkin);
-        playButton.setWidth(Gdx.graphics.getWidth()/4);
-        playButton.setHeight(Gdx.graphics.getHeight()/7);
-        playButton.setPosition((Gdx.graphics.getWidth()/4+playButton.getWidth()),Gdx.graphics.getHeight()/3-playButton.getHeight());
+        playButton.setWidth(stage.getWidth()/4);
+        playButton.setHeight(stage.getHeight()/7);
+        playButton.setPosition((stage.getWidth()/4+playButton.getWidth()),stage.getHeight()/3-playButton.getHeight());
         playButton.addListener(new InputListener(){
             @Override
             public void touchUp (InputEvent event, float x, float y, int pointer, int button) {
-                game.setScreen(new PeliRuutu(game));
+                game.setScreen(new PeliRuutu(game));    // takaisin hommiin
                 dispose();
             }
             @Override
@@ -111,7 +113,7 @@ public class ValiRuutu implements Screen{
             kolikko.setY(960f);
 
             MoveToAction action = new MoveToAction();
-            action.setPosition((Gdx.graphics.getWidth() * 5 / 7) + (i*(Gdx.graphics.getWidth()/5))/ keratytKolikot, Gdx.graphics.getHeight() * 2 / 3); // kolikot asettuu riviin, enemmän kolikoita -> pienemmät välit -> mahtuu ruutuun
+            action.setPosition((stage.getWidth() * 5 / 7) + (i*(stage.getWidth()/5))/ keratytKolikot, stage.getHeight() * 8 / 12); // kolikot asettuu riviin, enemmän kolikoita -> pienemmät välit -> mahtuu ruutuun
             action.setDuration(2f);
             kolikko.addAction(action);
             stage.addActor(kolikko);
@@ -129,8 +131,9 @@ public class ValiRuutu implements Screen{
         Gdx.gl.glClear(GL20.GL_COLOR_BUFFER_BIT);
         stage.act();    // updates all of the Actions connected to an Actor
 
+
         stage.getBatch().begin();
-            stage.getBatch().draw(alkuruutu, 0, 0, Gdx.graphics.getWidth(),Gdx.graphics.getHeight());
+            stage.getBatch().draw(alkuruutu, 0, 0, stage.getWidth(),stage.getHeight());
             stage.getBatch().end();
         stage.draw();
 
@@ -139,6 +142,7 @@ public class ValiRuutu implements Screen{
             //  jamppaMusic.stop();
 
             game.setScreen(new MainMenuRuutu(game));
+            dispose();
         }
     }
 
@@ -150,7 +154,8 @@ public class ValiRuutu implements Screen{
 
             pref.putInteger("taskurahat", taskurahat);
             pref.putInteger("kolikot", 0);
-            pref.putInteger("enkka", taskurahat); // TODO enkan tallennus
+            int enkka = (pref.getInteger("enkka"));
+            if (taskurahat > enkka) pref.putInteger("enkka", taskurahat); // jos paras rahatilanne koskaan -> tallennus
             pref.flush();
     }
 
@@ -178,6 +183,7 @@ public class ValiRuutu implements Screen{
 
     @Override
     public void dispose() {
+        alkuruutu.dispose();
         stage.dispose();
     }
 }

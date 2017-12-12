@@ -15,6 +15,9 @@ com.badlogic.gdx.graphics.g2d.BitmapFont: {
 	milkshake2: {
 		file: milkshake2.fnt
 	}
+	milkshake3: {
+		file: milkshake3.fnt
+	}
 }
 com.badlogic.gdx.graphics.Color: {
 	black: {
@@ -263,7 +266,7 @@ com.badlogic.gdx.scenes.scene2d.ui.ImageButton$ImageButtonStyle: {
 com.badlogic.gdx.scenes.scene2d.ui.ImageTextButton$ImageTextButtonStyle: {
 	default: {
 		font: milkshake2
-		fontColor: black
+		fontColor: color
 		downFontColor: text-selected
 		up: nappi1
 		down: nappi1_painettu
@@ -292,8 +295,15 @@ com.badlogic.gdx.scenes.scene2d.ui.ImageTextButton$ImageTextButtonStyle: {
 		checkedFontColor: text-selected
 	}
 	small: {
-		font: milkshake2
+		font: milkshake
 		fontColor: black
+		up: nappi1
+		down: nappi1_painettu
+		over: nappi1_painettu
+	}
+	smaller: {
+		font: milkshake3
+		fontColor: color
 		up: nappi1
 		down: nappi1_painettu
 		over: nappi1_painettu
@@ -311,6 +321,14 @@ com.badlogic.gdx.scenes.scene2d.ui.Label$LabelStyle: {
 	pressed: {
 		font: font-pressed
 		fontColor: text
+	}
+	black: {
+		font: milkshake2
+		fontColor: black
+	}
+	white-small: {
+		font: milkshake3
+		fontColor: color
 	}
 }
 com.badlogic.gdx.scenes.scene2d.ui.List$ListStyle: {

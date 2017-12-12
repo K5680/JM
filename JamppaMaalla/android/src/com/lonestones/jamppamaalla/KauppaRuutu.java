@@ -8,28 +8,19 @@ import com.badlogic.gdx.Preferences;
 import com.badlogic.gdx.Screen;
 import com.badlogic.gdx.audio.Music;
 import com.badlogic.gdx.audio.Sound;
-import com.badlogic.gdx.graphics.Color;
 import com.badlogic.gdx.graphics.GL20;
-import com.badlogic.gdx.graphics.OrthographicCamera;
-import com.badlogic.gdx.graphics.Pixmap;
 import com.badlogic.gdx.graphics.Texture;
-import com.badlogic.gdx.graphics.g2d.Sprite;
-import com.badlogic.gdx.graphics.g2d.TextureRegion;
-import com.badlogic.gdx.graphics.glutils.ShapeRenderer;
 import com.badlogic.gdx.math.MathUtils;
-import com.badlogic.gdx.math.Rectangle;
-import com.badlogic.gdx.scenes.scene2d.Actor;
 import com.badlogic.gdx.scenes.scene2d.InputEvent;
 import com.badlogic.gdx.scenes.scene2d.InputListener;
 import com.badlogic.gdx.scenes.scene2d.Stage;
-import com.badlogic.gdx.scenes.scene2d.actions.MoveToAction;
 import com.badlogic.gdx.scenes.scene2d.ui.Image;
 import com.badlogic.gdx.scenes.scene2d.ui.ImageTextButton;
 import com.badlogic.gdx.scenes.scene2d.ui.Label;
 import com.badlogic.gdx.utils.Align;
-import com.badlogic.gdx.utils.Array;
 import com.badlogic.gdx.utils.TimeUtils;
-import com.badlogic.gdx.utils.viewport.ScreenViewport;
+import com.badlogic.gdx.utils.viewport.ExtendViewport;
+
 
 
 /**
@@ -39,7 +30,7 @@ import com.badlogic.gdx.utils.viewport.ScreenViewport;
 
 public class KauppaRuutu implements Screen {
     private final JamppaMaalla game;
-    private OrthographicCamera camera;
+
     private Texture kaupparuutu_etu;
     private Texture kaupparuutu_taka;
     private Texture kaupassa;
@@ -49,7 +40,7 @@ public class KauppaRuutu implements Screen {
     private Stage menoStage;
     private Image kolikko;
     private int vaihe = 0;  // "animaation" vaihe
-    private Jamppa jamppa;
+    private Jamppa jamppa = new Jamppa(0);
     private Ruohonleikkuri leikkuri;
 
     private long ajastin;
@@ -68,22 +59,28 @@ public class KauppaRuutu implements Screen {
     private Label hintaLabel;
     private int[] hinta;
     private int leikkuritullessa;
+    private ExtendViewport vp;
 
 
     public KauppaRuutu(final JamppaMaalla peli) {
-        game = peli;
+        this.game = peli;
 
         pref =  Gdx.app.getPreferences("JamppaMaallaPrefs");  // haetaan tallennetut arvot
         haePrefs();
-
         leikkuritullessa = pref.getInteger("leikkuri");
-        stage = new Stage(new ScreenViewport());        // "näytös", jossa ollaan kaupassa
-        menoStage = new Stage(new ScreenViewport());    // "näytös", jossa J juoksee kauppaan
 
-        jamppa = new Jamppa(2);  // otetaan ruutuun "jamppa", joka juoksee kauppaan, skaalataan 2x
+        // ScreenViewPort =>  each unit in the stage corresponds to 1 pixel
+        // StretchViewport(640, 480) => The stage's size of 640x480 will be stretched to the screen size, potentially changing the stage's aspect ratio.
+        // FitViewport => The stage's size of 640x480 is scaled to fit the screen without changing the aspect ratio
+        // ExtendViewport. The stage's size of 640x480 is first scaled to fit without changing the aspect ratio, then the stage's shorter dimension is increased to fill the screen.
+        vp = new ExtendViewport(800,480);
+        stage = new Stage(vp);        // "näytös", jossa ollaan kaupassa
+        menoStage = new Stage(vp);    // "näytös", jossa J juoksee kauppaan
+
+        // jamppa mukaan
         jamppa.setX(-50);
-        jamppa.setY(100);
-        jamppa.setXmax(Gdx.graphics.getWidth()*3/4);
+        jamppa.setY(50);
+        jamppa.setXmax(stage.getWidth()*3/4);
         leikkuri = new Ruohonleikkuri();
 
         // ladataan kuvat
@@ -98,12 +95,12 @@ public class KauppaRuutu implements Screen {
         kolikkoSound = Gdx.audio.newSound(Gdx.files.internal("sounds/363090__fractalstudios__coins-being-dropped-assorted.mp3"));
         jamppaJyraa = Gdx.audio.newMusic(Gdx.files.internal("sounds/shortough_by_vesada.mp3"));
 
-
+        // leikkurien hinnat ja tyypit
         hinta = new int[4]; // Leikkurien hinnat, arvotaan jotta hinnat vaihtelee
-        hinta[0] = MathUtils.random(50, 100);
-        hinta[1] = 10; //MathUtils.random(1000, 2000);
-        hinta[2] = 10; //MathUtils.random(4000, 7000);
-        hinta[3] = 10;//MathUtils.random(10900, 15000);
+        hinta[0] = 1;//MathUtils.random(150, 300);
+        hinta[1] = 1;//MathUtils.random(1000, 2000);
+        hinta[2] = MathUtils.random(4000, 7000);
+        hinta[3] = MathUtils.random(10900, 15000);
         koneentyyppi = new String[4]; // Leikkurien nimet
         koneentyyppi[0] = "Basic";
         koneentyyppi[1] = "Runner";
@@ -113,38 +110,37 @@ public class KauppaRuutu implements Screen {
 
 
         // rahat
-        rahatLabel = new Label("Taskurahaa "+taskurahat+" e", JamppaMaalla.gameSkin,"default");
+        rahatLabel = new Label("Taskurahat "+taskurahat+" e", JamppaMaalla.gameSkin,"default");
         rahatLabel.setAlignment(Align.center);
-        rahatLabel.setPosition(Gdx.graphics.getWidth()*2/24,Gdx.graphics.getHeight()*3/20);
-        rahatLabel.setWidth(Gdx.graphics.getWidth()*1/3);
-        //rahatLabel.setFontScale(4f);
+        rahatLabel.setPosition(stage.getWidth()*2/24,stage.getHeight()*3/22);
+        rahatLabel.setWidth(stage.getWidth()*1/3);
+        rahatLabel.setFontScale(0.5f);
         stage.addActor(rahatLabel);  // lisätään "näyttämölle" "näyttelijä"
 
 
         // Koneen tyyppi ruutuun nuolten keskelle
         koneLabel = new Label(""+koneentyyppi, JamppaMaalla.gameSkin,"over");
         koneLabel.setAlignment(Align.center);
-        koneLabel.setPosition(Gdx.graphics.getWidth()*2/24,Gdx.graphics.getHeight()*2/20);
-        koneLabel.setWidth(Gdx.graphics.getWidth()*1/3);
-        koneLabel.setFontScale(4f);
+        koneLabel.setPosition(stage.getWidth()*2/24,stage.getHeight()*2/20);
+        koneLabel.setWidth(stage.getWidth()*1/3);
+        koneLabel.setFontScale(2f);
         stage.addActor(koneLabel);  // lisätään "näyttämölle" "näyttelijä"
 
 
         // Hinta esille
         hintaLabel = new Label(""+koneentyyppi, JamppaMaalla.gameSkin,"over");
         hintaLabel.setAlignment(Align.center);
-        hintaLabel.setPosition(Gdx.graphics.getWidth()*2/24,Gdx.graphics.getHeight()*1/20);
-        hintaLabel.setWidth(Gdx.graphics.getWidth()*1/3);
-        hintaLabel.setFontScale(4f);
+        hintaLabel.setPosition(stage.getWidth()*2/24,stage.getHeight()*1/22);
+        hintaLabel.setWidth(stage.getWidth()*1/3);
+        hintaLabel.setFontScale(2f);
         stage.addActor(hintaLabel);  // lisätään "näyttämölle" "näyttelijä"
 
 
-
         // gameSkin napit VASEN nuoli
-        ImageTextButton vasenButton = new ImageTextButton("<",JamppaMaalla.gameSkin,"small");
-        vasenButton.setWidth(Gdx.graphics.getWidth()/10);
-        vasenButton.setHeight(Gdx.graphics.getHeight()/9);
-        vasenButton.setPosition(10,10); // vasempaan alareunaan.setPosition(10,10); // vasempaan alareunaan
+        ImageTextButton vasenButton = new ImageTextButton("<",JamppaMaalla.gameSkin);
+        vasenButton.setWidth(stage.getWidth()/10);
+        vasenButton.setHeight(stage.getHeight()/9);
+        vasenButton.setPosition(10,10); // vasempaan alareunaan.setPosition(10,10); // vasempaan alareunaan;
         vasenButton.addListener(new InputListener(){
             @Override
             public void touchUp (InputEvent event, float x, float y, int pointer, int button) {
@@ -159,12 +155,11 @@ public class KauppaRuutu implements Screen {
         stage.addActor(vasenButton); // lisätään "näyttämölle" "näyttelijä"
 
 
-
         // gameSkin nappi OIKEA nuoli
-        ImageTextButton oikeaButton = new ImageTextButton(">",JamppaMaalla.gameSkin,"small");
-        oikeaButton.setWidth(Gdx.graphics.getWidth()/10);
-        oikeaButton.setHeight(Gdx.graphics.getHeight()/9);
-        oikeaButton.setPosition((Gdx.graphics.getWidth()*4/10),10); // sijainti
+        ImageTextButton oikeaButton = new ImageTextButton(">",JamppaMaalla.gameSkin);
+        oikeaButton.setWidth(stage.getWidth()/10);
+        oikeaButton.setHeight(stage.getHeight()/9);
+        oikeaButton.setPosition((stage.getWidth()*4/10),10); // sijainti
         oikeaButton.addListener(new InputListener(){
             @Override
             public void touchUp (InputEvent event, float x, float y, int pointer, int button) {
@@ -180,10 +175,10 @@ public class KauppaRuutu implements Screen {
 
 
         // gameSkin nappi OSTA
-        ImageTextButton ostaButton = new ImageTextButton("Osta",JamppaMaalla.gameSkin);
-        ostaButton.setWidth(Gdx.graphics.getWidth()/8);
-        ostaButton.setHeight(Gdx.graphics.getHeight()/7);
-        ostaButton.setPosition((Gdx.graphics.getWidth()*5/10+10),10);   // sijainti
+        ImageTextButton ostaButton = new ImageTextButton("Osta",JamppaMaalla.gameSkin, "small");
+        ostaButton.setWidth(stage.getWidth()/8);
+        ostaButton.setHeight(stage.getHeight()/7);
+        ostaButton.setPosition((stage.getWidth()*5/10+10),10);   // sijainti
         ostaButton.addListener(new InputListener(){
             @Override
             public void touchUp (InputEvent event, float x, float y, int pointer, int button) {
@@ -192,6 +187,9 @@ public class KauppaRuutu implements Screen {
                     pref.putInteger("taskurahat", taskurahat);  // rahat ja uusi leikkuri talteen
                     pref.putInteger("leikkuri", kone);
                     pref.flush();
+
+                    game.elamat = 3; // nollataan törmäykset, koska uusi leikkuri on kolhuton
+
                     kolikkoSound.play();
                 } else {
                     hitSound.play();
@@ -206,24 +204,24 @@ public class KauppaRuutu implements Screen {
         stage.addActor(ostaButton); // lisätään "näyttämölle" "näyttelijä"
 
 
-
         // gameSkin nappi HOMMIIN
-        ImageTextButton hommiinButton = new ImageTextButton("Hommiin",JamppaMaalla.gameSkin);
-        hommiinButton.setWidth(Gdx.graphics.getWidth()/4);
-        hommiinButton.setHeight(Gdx.graphics.getHeight()/7);
-        hommiinButton.setPosition((Gdx.graphics.getWidth()*7/10),10);   // sijainti
+        ImageTextButton hommiinButton = new ImageTextButton("Hommiin",JamppaMaalla.gameSkin, "small");
+        hommiinButton.setWidth(stage.getWidth()/4);
+        hommiinButton.setHeight(stage.getHeight()/7);
+        hommiinButton.setPosition((stage.getWidth()*7/10),10);   // sijainti
         hommiinButton.addListener(new InputListener(){
             @Override
             public void touchUp (InputEvent event, float x, float y, int pointer, int button) {
 
                 if (leikkuritullessa != pref.getInteger("leikkuri")){   // jos leikkuri uusittu, jamppa porhaltaa uudella koneella
                         vaihe = 6;
-                        jamppa.setXmax(Gdx.graphics.getWidth()+400);
-                        jamppa.setX(Gdx.graphics.getWidth()+400);
-                        jamppa.setY(100);
+                        jamppa.setXmax(stage.getWidth()+400);
+                        jamppa.setX(stage.getWidth()+400);
+                        jamppa.setY(10);
                         jamppa.setXmin(-300);
                         leikkuri.setTaso(kone); // aseta leikkurin tyyppi
-                        jamppaJyraa.play();
+                        if (game.musiikkiOn) jamppaJyraa.play();
+                        ajastin = TimeUtils.nanoTime();
                 } else {
                 game.setScreen(new PeliRuutu(game));
                 dispose();
@@ -236,10 +234,8 @@ public class KauppaRuutu implements Screen {
         });
         stage.addActor(hommiinButton); // lisätään "näyttämölle" "näyttelijä"
 
-
         // otetaan "back" -nappula normikäyttöön (peliruudussa napataan sen toiminto)
         Gdx.input.setCatchBackKey(true);   // ulos pelistä back-napilla
-
         ajastin = TimeUtils.nanoTime();
     }
 
@@ -252,6 +248,7 @@ public class KauppaRuutu implements Screen {
         Gdx.gl.glClearColor(1, 1, 1, 1);
         Gdx.gl.glClear(GL20.GL_COLOR_BUFFER_BIT);
 
+        float ratio = kaupparuutu_etu.getHeight()/kaupparuutu_etu.getWidth();   // kauppakuvien x:n ja y:n suhde, jotta skaalaus menee samassa suhteessa
 
         if ((TimeUtils.nanoTime() > ajastin + TimeUtils.millisToNanos(viive))) {
             if (vaihe == 2) {
@@ -268,51 +265,60 @@ public class KauppaRuutu implements Screen {
         }
 
         if (vaihe == 5) {   // Kaupan sisällä -stage
-
             koneLabel.setText(""+koneentyyppi[kone]);   // Päivitä valitun koneen nimi ruutuun
             hintaLabel.setText(""+hinta[kone]);         // ja hinta
-            rahatLabel.setText(""+taskurahat);          // ja rahat
+            rahatLabel.setText("Taskurahat "+ " " + taskurahat+" e");          // ja rahat
+            stage.getViewport().apply();
             stage.act();    // updates all of the Actions connected to an Actor
 
             stage.getBatch().begin();
-                stage.getBatch().draw(kaupassa, 0, 0, Gdx.graphics.getWidth(), Gdx.graphics.getHeight());
+                stage.getBatch().draw(kaupassa, 0, 0, menoStage.getWidth(),menoStage.getHeight());
             stage.getBatch().end();
             stage.draw();
         } else {        // kaupan ulkopuolella
             if (vaihe == 6) {   // jamppa tulee kaupasta uuden leikkurin kanssa
                 jamppa.setX(jamppa.getX() - 5f);
-                    if (jamppa.getX() < -250) {    // takaisin hommiin kun jamppa mennyt ruudun ohi
+                    if (TimeUtils.nanoTime() > ajastin+TimeUtils.millisToNanos(8000)) {    // takaisin hommiin kun jamppa mennyt ruudun ohi (musiikin pituus)
+                        if (game.musiikkiOn) jamppaJyraa.stop();
+
                         game.setScreen(new PeliRuutu(game));
                         dispose();
+
                     }
             } else {    // Jamppa juoksee kauppaan -stage
                 jamppa.setX(jamppa.getX() + 5f);
-                if (jamppa.getX() > (Gdx.graphics.getWidth() * 3 / 7)) {
-                    jamppa.setY(jamppa.getY() + 20f);
+                if (jamppa.getX() > (ratio*menoStage.getHeight()*8/10)) {
+                    jamppa.setY(jamppa.getY() + 5f);
                     if (vaihe == 0) vaihe = 1;
                 }
             }
+            menoStage.getViewport().apply();
             menoStage.act();    // updates all of the Actions connected to an Actor
             menoStage.getBatch().begin();
-                menoStage.getBatch().draw(kaupparuutu_etu, 0, 0, Gdx.graphics.getWidth()/2, Gdx.graphics.getHeight());
-                if (vaihe == 1 || vaihe == 2) {                     // oviaukko
-                    if (vaihe == 1) ovenkolaus.play() ; vaihe = 2;  // oviääni kerran
-                    menoStage.getBatch().draw(ovi, 0, 0, Gdx.graphics.getWidth()/2, Gdx.graphics.getHeight());
+                menoStage.getBatch().draw(kaupparuutu_etu, 0, 0,ratio*menoStage.getHeight(),menoStage.getHeight());
+                if (vaihe == 1 || vaihe == 2) { // oviaukko
+                    if (vaihe == 1) {           // oviääni kerran, ovensulku viive
+                        vaihe = 2;
+                        viive = 700;
+                        ajastin = TimeUtils.nanoTime();
+                        ovenkolaus.play();
+                    }
+                    menoStage.getBatch().draw(ovi, 0, 0, ratio*menoStage.getHeight(),menoStage.getHeight());
                 }
                 if (vaihe == 6) {   // jamppa tulee pois kaupasta, käännetty kuva on jamppa-luokassa getJamppaKuvaKaanto -metodilla haettavissa(flipattu)
-                    menoStage.getBatch().draw(kaupparuutu_taka, Gdx.graphics.getWidth()/2, 0, Gdx.graphics.getWidth()/2, Gdx.graphics.getHeight());
+                    menoStage.getBatch().draw(kaupparuutu_taka, ratio*menoStage.getHeight(),0,ratio*menoStage.getHeight(),menoStage.getHeight());
                     menoStage.getBatch().draw(jamppa.getJamppaKuvaKaanto(), jamppa.getX(), jamppa.getY());
-                    menoStage.getBatch().draw(leikkuri.getLeikkuriKuvaKaanto(), jamppa.getX(), jamppa.getY(), leikkuri.getLeikkuriKuvaKaanto().getRegionWidth()*2,leikkuri.getLeikkuriKuvaKaanto().getRegionHeight()*2);
+                    menoStage.getBatch().draw(leikkuri.getLeikkuriKuvaKaanto(), jamppa.getX(), jamppa.getY());
                 } else {
                     menoStage.getBatch().draw(jamppa.getJamppaKuva(), jamppa.getX(), jamppa.getY());
                 }
-                if (vaihe < 6) menoStage.getBatch().draw(kaupparuutu_taka, Gdx.graphics.getWidth()/2, 0, Gdx.graphics.getWidth()/2, Gdx.graphics.getHeight());
+                if (vaihe < 6) menoStage.getBatch().draw(kaupparuutu_taka, ratio*menoStage.getHeight(),0,ratio*menoStage.getHeight(),menoStage.getHeight());
             menoStage.getBatch().end();
 
             menoStage.draw();
         }
 
-
+        Log.d("TAG", "render: "+vaihe);
         if (Gdx.input.isKeyPressed(Input.Keys.BACK)) {
             // back-napilla takaisin main menuun
             //  jamppaMusic.stop();
@@ -329,6 +335,8 @@ public class KauppaRuutu implements Screen {
 
     @Override
     public void resize(int width, int height) {
+        stage.getViewport().update(width, height, true);
+        menoStage.getViewport().update(width, height, true);
     }
 
     @Override
@@ -354,10 +362,10 @@ public class KauppaRuutu implements Screen {
         kaupparuutu_etu.dispose();
         kaupparuutu_taka.dispose();
         ovi.dispose();
-        menoStage.dispose();
-        stage.dispose();
         kolikkoSound.dispose();
         hitSound.dispose();
         jamppaJyraa.dispose();
+        menoStage.dispose();
+        stage.dispose();
     }
 }
