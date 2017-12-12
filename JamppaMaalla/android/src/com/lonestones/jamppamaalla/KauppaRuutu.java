@@ -78,6 +78,7 @@ public class KauppaRuutu implements Screen {
         menoStage = new Stage(vp);    // "näytös", jossa J juoksee kauppaan
 
         // jamppa mukaan
+        jamppa.setXmin(-50);
         jamppa.setX(-50);
         jamppa.setY(50);
         jamppa.setXmax(stage.getWidth()*3/4);
@@ -97,8 +98,8 @@ public class KauppaRuutu implements Screen {
 
         // leikkurien hinnat ja tyypit
         hinta = new int[4]; // Leikkurien hinnat, arvotaan jotta hinnat vaihtelee
-        hinta[0] = 1;//MathUtils.random(150, 300);
-        hinta[1] = 1;//MathUtils.random(1000, 2000);
+        hinta[0] = MathUtils.random(150, 300);
+        hinta[1] = MathUtils.random(1000, 2000);
         hinta[2] = MathUtils.random(4000, 7000);
         hinta[3] = MathUtils.random(10900, 15000);
         koneentyyppi = new String[4]; // Leikkurien nimet
@@ -279,11 +280,7 @@ public class KauppaRuutu implements Screen {
             if (vaihe == 6) {   // jamppa tulee kaupasta uuden leikkurin kanssa
                 jamppa.setX(jamppa.getX() - 5f);
                     if (TimeUtils.nanoTime() > ajastin+TimeUtils.millisToNanos(8000)) {    // takaisin hommiin kun jamppa mennyt ruudun ohi (musiikin pituus)
-                        if (game.musiikkiOn) jamppaJyraa.stop();
-
-                        game.setScreen(new PeliRuutu(game));
-                        dispose();
-
+                        vaihe = 7;
                     }
             } else {    // Jamppa juoksee kauppaan -stage
                 jamppa.setX(jamppa.getX() + 5f);
@@ -318,6 +315,8 @@ public class KauppaRuutu implements Screen {
             menoStage.draw();
         }
 
+        if (vaihe == 7) takaisinPeliin();   // takaisin peliruutuun
+
         Log.d("TAG", "render: "+vaihe);
         if (Gdx.input.isKeyPressed(Input.Keys.BACK)) {
             // back-napilla takaisin main menuun
@@ -325,6 +324,12 @@ public class KauppaRuutu implements Screen {
             game.setScreen(new MainMenuRuutu(game));
             dispose();
         }
+    }
+
+
+    private void takaisinPeliin() {
+        game.setScreen(new PeliRuutu(game));
+        dispose();
     }
 
 

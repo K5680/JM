@@ -76,7 +76,7 @@ public class PeliRuutu implements Screen {
     private double prosentti;
     private double nurmiPotentiaali;
     private int lopunAlku;  // kentän vaihtuminen
-    private double kentassaNurmikoita = 4; //0;
+    private double kentassaNurmikoita;
 
     private Preferences pref;
 
@@ -95,6 +95,7 @@ public class PeliRuutu implements Screen {
         pref =  Gdx.app.getPreferences("JamppaMaallaPrefs"); // haetaan prefsseistä tallennetut arvot
         haePrefs(); // haetaan preferenceistä talletetut tiedot (rahat, leikkuri ym.)
 
+        kentassaNurmikoita = MathUtils.random(40,100);  // arvotaan kentän pituus
 
         // partikkeliefektit
         pe = new ParticleEffect();
