@@ -5,10 +5,7 @@ package com.lonestones.jamppamaalla;
  */
 
 
-import android.content.Context;
 import android.util.Log;
-import android.widget.Toast;
-
 import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.Input.Keys;
 import com.badlogic.gdx.Preferences;
@@ -17,19 +14,14 @@ import com.badlogic.gdx.audio.Music;
 import com.badlogic.gdx.audio.Sound;
 import com.badlogic.gdx.graphics.GL20;
 import com.badlogic.gdx.graphics.OrthographicCamera;
-import com.badlogic.gdx.graphics.Pixmap;
 import com.badlogic.gdx.graphics.Texture;
 import com.badlogic.gdx.graphics.g2d.ParticleEffect;
 import com.badlogic.gdx.math.MathUtils;
 import com.badlogic.gdx.math.Vector3;
-
 import com.badlogic.gdx.utils.Array;
 import com.badlogic.gdx.utils.TimeUtils;
-
-import java.io.FileOutputStream;
 import java.util.Iterator;
 
-import static android.provider.Telephony.Mms.Part.FILENAME;
 
 // Screens contain methods from ApplicationListener objects + new methods like show and hide (lose focus).
 public class PeliRuutu implements Screen {
