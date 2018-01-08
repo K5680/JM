@@ -480,6 +480,7 @@ public void esteidenHallinta() {
             }
         }
         if (lopunAlku < 3) {
+
             game.batch.draw(jamppa.getJamppaKuva(), jamppa.getX(), jamppa.getY());              // piirrä Jamppa-freimi
             game.batch.draw(leikkuri.getLeikkuriKuva(),  leikkuri.getX(), leikkuri.getY());     // piirrä ruohonleikkuri
         }
